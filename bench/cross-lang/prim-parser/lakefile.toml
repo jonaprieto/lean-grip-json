@@ -1,0 +1,12 @@
+name = "primparser-bench"
+defaultTargets = ["gripjson"]
+
+[[lean_exe]]
+name = "gripjson"
+root = "GripJson"
+
+# prim-parser via local path; inherits its mathlib dependency.
+# Run `lake exe cache get` before `lake build` to fetch prebuilt mathlib oleans.
+[[require]]
+name = "prim-parser"
+path = "../../../../prim-parser"

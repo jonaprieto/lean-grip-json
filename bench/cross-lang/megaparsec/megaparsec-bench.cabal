@@ -1,0 +1,15 @@
+cabal-version: 2.4
+name:          megaparsec-bench
+version:       0.1.0.0
+build-type:    Simple
+
+executable megaparsec-bench
+  main-is:             Main.hs
+  build-depends:
+      base       >= 4.14 && < 5
+    , bytestring >= 0.11
+    , megaparsec >= 9.0
+    , clock      >= 0.8
+    , filepath   >= 1.4
+  default-language:    Haskell2010
+  ghc-options:         -O2 -Wall -threaded

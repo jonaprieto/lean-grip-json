@@ -1,0 +1,16 @@
+[package]
+name = "nom-bench"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "nom-bench"
+path = "src/main.rs"
+
+[dependencies]
+nom = "7"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

@@ -1,0 +1,2 @@
+# These fixtures intentionally contain trailing spaces; the parser must see them.
+test/jsontestsuite/*.json -diff

@@ -1,0 +1,133 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  style:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: jonaprieto/precommit-lean/.github/actions/precommit@v0.1.3
+        with:
+          token: ${{ secrets.ECOSYSTEM_READ_TOKEN }}
+      - run: git diff --check
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Cache elan toolchain
+        uses: actions/cache@v6
+        with:
+          path: ~/.elan
+          key: elan-${{ runner.os }}-${{ hashFiles('lean-toolchain') }}
+      - name: Cache Lake dependencies
+        uses: actions/cache@v6
+        with:
+          path: .lake
+          key: lake-${{ runner.os }}-${{ hashFiles('lake-manifest.json', 'lakefile.lean', 'lean-toolchain') }}
+          restore-keys: lake-${{ runner.os }}-
+      - name: Configure private ecosystem access
+        env:
+          GH_TOKEN: ${{ secrets.ECOSYSTEM_READ_TOKEN }}
+        run: test -n "$GH_TOKEN"
+      - name: Configure private ecosystem URL
+        env:
+          GH_TOKEN: ${{ secrets.ECOSYSTEM_READ_TOKEN }}
+        run: |
+          test -n "$GH_TOKEN"
+          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: .
+          build-args: "GripJson GripJsonTest Examples tests demo readme conformance bench"
+      - run: lake exe tests
+      - run: lake exe readme
+      - run: lake exe demo >/dev/null
+      - run: lake exe conformance
+      - uses: jonaprieto/precommit-lean/.github/actions/precommit@v0.1.3
+        with:
+          token: ${{ secrets.ECOSYSTEM_READ_TOKEN }}
+          hooks: lean-axioms
+
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Configure private ecosystem access
+        env:
+          GH_TOKEN: ${{ secrets.ECOSYSTEM_READ_TOKEN }}
+        run: test -n "$GH_TOKEN"
+      - name: Configure private ecosystem URL
+        env:
+          GH_TOKEN: ${{ secrets.ECOSYSTEM_READ_TOKEN }}
+        run: |
+          test -n "$GH_TOKEN"
+          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+      - uses: leanprover/lean-action@v1
+        with:
+          build-args: bench
+      - name: Run benchmark and enforce corpus counts
+        run: |
+          out=$(lake exe bench)
+          echo "$out"
+          {
+            echo "### grip-json benchmark"
+            echo '```'
+            echo "$out"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          grep -qE '^grip canada count=111130 ' <<<"$out"
+          grep -qE '^grip citm count=16390 ' <<<"$out"
+          grep -qE '^grip twitter count=11600 ' <<<"$out"
+          grep -qE '^grip\.json canada count=111130 ' <<<"$out"
+          grep -qE '^lean\.json canada count=111130 ' <<<"$out"
+
+  props:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Cache elan toolchain
+        uses: actions/cache@v6
+        with:
+          path: ~/.elan
+          key: elan-${{ runner.os }}-${{ hashFiles('grip-props/lean-toolchain', 'lean-toolchain') }}
+      - name: Cache grip-props build
+        uses: actions/cache@v6
+        with:
+          path: grip-props/.lake
+          key: lake-props-${{ runner.os }}-${{ hashFiles('grip-props/lake-manifest.json', 'lean-toolchain') }}
+          restore-keys: lake-props-${{ runner.os }}-
+      - name: Configure private ecosystem URL
+        env:
+          GH_TOKEN: ${{ secrets.ECOSYSTEM_READ_TOKEN }}
+        run: |
+          test -n "$GH_TOKEN"
+          git config --global url."https://x-access-token:${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+      - name: Install elan
+        run: |
+          if [ ! -x "$HOME/.elan/bin/elan" ]; then
+            curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y --default-toolchain none
+          fi
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Build grip-props with mathlib cache
+        working-directory: grip-props
+        run: |
+          lake update
+          lake exe cache get
+          lake build
+      - name: Audit JSON round-trip theorem axioms
+        working-directory: grip-props
+        run: lake env lean -R . GripProps/AxiomAudit.lean

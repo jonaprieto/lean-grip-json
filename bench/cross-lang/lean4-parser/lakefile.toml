@@ -1,0 +1,13 @@
+name = "l4pbench"
+defaultTargets = ["L4pBench"]
+
+[[lean_exe]]
+name = "L4pBench"
+root = "Main"
+
+# fgdorais/lean4-parser, pinned to its last v4.28.0-compatible revision (grip's own
+# toolchain), so this runs on the SAME compiler as grip -- no cross-toolchain confound.
+[[require]]
+name = "Parser"
+git = "https://github.com/fgdorais/lean4-parser"
+rev = "d8428e2"

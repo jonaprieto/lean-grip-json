@@ -1,0 +1,24 @@
+name = "grip-json-props"
+version = "0.1.0"
+defaultTargets = ["GripProps"]
+
+[leanOptions]
+autoImplicit = false
+
+[[lean_lib]]
+name = "GripProps"
+globs = ["GripProps", "GripProps.+"]
+
+[[require]]
+name = "grip"
+git = "https://github.com/jonaprieto/lean-grip.git"
+rev = "v0.2.0"
+
+[[require]]
+name = "grip-json"
+path = ".."
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.32.2"

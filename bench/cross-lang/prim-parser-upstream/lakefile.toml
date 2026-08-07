@@ -1,0 +1,16 @@
+name = "ppupstream"
+defaultTargets = ["bench-canada"]
+
+[[lean_exe]]
+name = "bench-canada"
+root = "BenchCanada"
+
+# The ACTUAL upstream prim-parser (Jan Mas Rovira), pinned to 0728704 — the latest
+# upstream commit on Lean v4.28.0 (main moved to v4.32 in #14). Includes upstream's
+# own perf work (#9 flatten outcome, #11 Text refactor). Char-level `List.Vector Char n`;
+# pulls mathlib transitively.
+[[require]]
+name = "PrimParser"
+scope = ""
+git = "https://github.com/janmasrovira/prim-parser"
+rev = "07287042291ad28e710b6e7602182f4ce947147b"

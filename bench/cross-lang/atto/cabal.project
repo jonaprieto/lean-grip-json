@@ -1,0 +1,12 @@
+packages: .
+
+optimization: 2
+
+package attoparsec
+  optimization: 2
+
+package bytestring
+  optimization: 2
+
+package clock
+  optimization: 2
