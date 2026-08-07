@@ -106,7 +106,7 @@ jobs:
       - name: Cache grip-props build
         uses: actions/cache@v6
         with:
-          path: grip-props/.lake
+          path: grip-props/.lake/build
           key: lake-props-${{ runner.os }}-${{ hashFiles('grip-props/lake-manifest.json', 'lean-toolchain') }}
           restore-keys: lake-props-${{ runner.os }}-
       - name: Configure private ecosystem URL
