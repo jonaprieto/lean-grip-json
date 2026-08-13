@@ -35,6 +35,10 @@ portability, performance, documentation, and real-world use. Please use the
 [issue tracker](https://github.com/jonaprieto/lean-grip-json/issues) or open a PR with a
 reproducible example and the expected behavior.
 
+## Related projects
+
+[`oatp`](https://github.com/jonaprieto/oatp) uses `grip-json` for its JSON configuration.
+
 ## Install
 
 ```lean
