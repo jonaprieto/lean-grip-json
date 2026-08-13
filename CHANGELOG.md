@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.4 — 2026-08-13
+
+- Add the standard review guidance to the README.
+- Pin the newest released Grip dependency in both Lake projects.
+
 ## 0.1.3 — 2026-08-13
 
 - Adopt precommit-lean v0.1.6.
