@@ -342,7 +342,6 @@ theorem value_run_number (arr : ByteArray) (q : Nat) (m : Int) (e n : Nat)
     rw [value, fix_run_unroll]
     simp only [valueBody]
     rw [wsDispatch_run_stop _ arr q hq (isDigit_not_ws hdigit)]
-    simp only [Ascii.lbrace, Ascii.lbracket, Ascii.quote, Ascii.dash]
     rw [if_neg (hne 123 (by decide)), if_neg (hne 91 (by decide)), if_neg (hne 34 (by decide)),
       if_neg (hne (Ascii.code 't') (by decide)), if_neg (hne (Ascii.code 'f') (by decide)),
       if_neg (hne (Ascii.code 'n') (by decide)),
@@ -356,7 +355,6 @@ theorem value_run_number (arr : ByteArray) (q : Nat) (m : Int) (e n : Nat)
     rw [value, fix_run_unroll]
     simp only [valueBody]
     rw [wsDispatch_run_stop _ arr q hq hws]
-    simp only [Ascii.lbrace, Ascii.lbracket, Ascii.quote, Ascii.dash]
     rw [if_neg (hne 123 (by decide)), if_neg (hne 91 (by decide)), if_neg (hne 34 (by decide)),
       if_neg (hne (Ascii.code 't') (by decide)), if_neg (hne (Ascii.code 'f') (by decide)),
       if_neg (hne (Ascii.code 'n') (by decide)),
@@ -578,7 +576,6 @@ theorem value_run_null (arr : ByteArray) (q : Nat) (hq : q + 4 ≤ arr.size)
     simpa [hlit] using this
   rw [value, fix_run_unroll]; simp only [valueBody]
   rw [wsDispatch_run_stop _ arr q hs (by rw [hb]; decide), hb]
-  simp only [Ascii.lbrace, Ascii.lbracket, Ascii.quote]
   rw [if_neg (by decide), if_neg (by decide), if_neg (by decide), if_neg (by decide),
     if_neg (by decide), if_pos (by decide)]
   simp only [jnull, GParser.label, GParser.map, hstr]
@@ -599,7 +596,6 @@ theorem value_run_true (arr : ByteArray) (q : Nat) (hq : q + 4 ≤ arr.size)
     simpa [hlit] using this
   rw [value, fix_run_unroll]; simp only [valueBody]
   rw [wsDispatch_run_stop _ arr q hs (by rw [hb]; decide), hb]
-  simp only [Ascii.lbrace, Ascii.lbracket, Ascii.quote]
   rw [if_neg (by decide), if_neg (by decide), if_neg (by decide), if_pos (by decide)]
   simp only [jtrue, GParser.label, GParser.map, hstr]
   exact clampAdvance_ok arr q (by omega) (by omega)
@@ -619,7 +615,6 @@ theorem value_run_false (arr : ByteArray) (q : Nat) (hq : q + 5 ≤ arr.size)
     simpa [hlit] using this
   rw [value, fix_run_unroll]; simp only [valueBody]
   rw [wsDispatch_run_stop _ arr q hs (by rw [hb]; decide), hb]
-  simp only [Ascii.lbrace, Ascii.lbracket, Ascii.quote]
   rw [if_neg (by decide), if_neg (by decide), if_neg (by decide), if_neg (by decide),
     if_pos (by decide)]
   simp only [jfalse, GParser.label, GParser.map, hstr]
@@ -698,7 +693,6 @@ theorem value_run_str (arr : ByteArray) (q : Nat) (s : String)
   have hq34 : arr[q] = 34 := by rwa [getElem!_pos arr q hqs] at h34
   have hws : Ascii.isWs arr[q] = false := by rw [hq34]; decide
   rw [value, fix_run_unroll]; simp only [valueBody]; rw [wsDispatch_run_stop _ arr q hqs hws, hq34]
-  simp only [Ascii.lbrace, Ascii.lbracket, Ascii.quote]
   rw [if_neg (by decide), if_neg (by decide), if_pos (by decide)]
   simp only [jstring]
   rw [map_run_ok Json.str jstr arr q s _
