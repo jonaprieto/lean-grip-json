@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5 — 2026-08-13
+
+- Document OATP as a related consumer.
+
 ## 0.1.4 — 2026-08-13
 
 - Add the standard review guidance to the README.
