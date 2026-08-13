@@ -342,7 +342,8 @@ theorem value_run_number (arr : ByteArray) (q : Nat) (m : Int) (e n : Nat)
     rw [value, fix_run_unroll]
     simp only [valueBody]
     rw [wsDispatch_run_stop _ arr q hq (isDigit_not_ws hdigit)]
-    rw [if_neg (hne 123 (by decide)), if_neg (hne 91 (by decide)), if_neg (hne 34 (by decide)),
+    rw [if_neg (hne Ascii.lbrace (by decide)), if_neg (hne Ascii.lbracket (by decide)),
+      if_neg (hne Ascii.quote (by decide)),
       if_neg (hne (Ascii.code 't') (by decide)), if_neg (hne (Ascii.code 'f') (by decide)),
       if_neg (hne (Ascii.code 'n') (by decide)),
       if_pos (by rw [hdigit]; rfl), hnum]
@@ -355,7 +356,8 @@ theorem value_run_number (arr : ByteArray) (q : Nat) (m : Int) (e n : Nat)
     rw [value, fix_run_unroll]
     simp only [valueBody]
     rw [wsDispatch_run_stop _ arr q hq hws]
-    rw [if_neg (hne 123 (by decide)), if_neg (hne 91 (by decide)), if_neg (hne 34 (by decide)),
+    rw [if_neg (hne Ascii.lbrace (by decide)), if_neg (hne Ascii.lbracket (by decide)),
+      if_neg (hne Ascii.quote (by decide)),
       if_neg (hne (Ascii.code 't') (by decide)), if_neg (hne (Ascii.code 'f') (by decide)),
       if_neg (hne (Ascii.code 'n') (by decide)),
       if_pos (by rw [hdash]; decide), hnum]
