@@ -30,6 +30,7 @@ protected abbrev P := SimpleParser String.Slice Char
 @[inline] def ws : L4pJsonChar.P Unit :=
   dropMany (tokenFilter isWs)
 
+-- partiality: this follows the upstream parser fixture's direct input-consuming loop.
 /-- Escape-aware string body: skip chars until an unescaped `"`, treating `\` as escaping the
     next char (so `\"` does not end the string). Needed for citm/twitter, which contain `\"`. -/
 partial def skipStrBody : L4pJsonChar.P Unit := do
@@ -45,6 +46,8 @@ def skipStr : L4pJsonChar.P Unit := do
   skipStrBody
 
 mutual
+
+-- partiality: these mutually recursive parser fixtures preserve the upstream benchmark shape.
 
 /-- Parse a JSON value; returns leaf count -/
 protected partial def value : L4pJsonChar.P Nat := do
@@ -68,6 +71,7 @@ protected partial def value : L4pJsonChar.P Nat := do
     Uses foldl (non-allocating) instead of sepBy (allocates Array).
     After `{` is already consumed by `value`, this reads: ws (} | pair (, pair)*) ws }
 -/
+-- partiality: recursive object parsing is part of the upstream benchmark fixture.
 protected partial def object : L4pJsonChar.P Nat := do
   ws
   match ← option? (token '}') with
@@ -83,6 +87,7 @@ protected partial def object : L4pJsonChar.P Nat := do
     return total
 
 /-- Parse one key:value pair (key string not counted, value counted) -/
+-- partiality: recursive object parsing is part of the upstream benchmark fixture.
 protected partial def pair : L4pJsonChar.P Nat := do
   ws
   skipStr       -- key (not counted)
@@ -94,6 +99,7 @@ protected partial def pair : L4pJsonChar.P Nat := do
     Uses foldl (non-allocating) instead of sepBy (allocates Array).
     After `[` is already consumed by `value`, this reads: ws (] | value (, value)*) ws ]
 -/
+-- partiality: recursive array parsing is part of the upstream benchmark fixture.
 protected partial def array : L4pJsonChar.P Nat := do
   ws
   match ← option? (token ']') with

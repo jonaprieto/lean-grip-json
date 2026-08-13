@@ -2,7 +2,7 @@ import Lake
 open Lake DSL
 
 package «grip-json» where
-  version := v!"0.1.1"
+  version := v!"0.1.2"
   leanOptions := #[⟨`autoImplicit, false⟩, ⟨`relaxedAutoImplicit, false⟩]
 
 require grip from git
@@ -20,6 +20,7 @@ lean_lib «GripJsonTest» where
   srcDir := "test"
   roots := #[`GripJsonTest]
 
+@[test_driver]
 lean_exe «tests» where
   root := `Tests
   srcDir := "test"
