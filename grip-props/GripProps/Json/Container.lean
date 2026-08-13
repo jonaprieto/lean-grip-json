@@ -893,6 +893,7 @@ theorem value_run_at : ∀ (v : Json) (buf : ByteArray) (q : Nat),
           rw [Grip.Json.value, fix_run_unroll]; simp only [Grip.Json.valueBody]
           rw [wsDispatch_run_stop _ buf (q + 1) hq1lt hws1, hbuf1]
           simp [hbuf1, Ascii.lbrace, Ascii.lbracket, Ascii.quote, Ascii.code,
+            Ascii.isDigit, Ascii.dash, Ascii.isExp,
             clampAdvance, GParser.label, GParser.map, GParser.satisfy]
         have hs1 : scanFwd buf Ascii.isWs (q + 1) = q + 1 := by
           rw [scanFwd, dif_pos hq1lt, if_neg (by rw [hws1]; decide)]
