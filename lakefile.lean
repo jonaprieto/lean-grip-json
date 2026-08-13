@@ -20,6 +20,7 @@ lean_lib «GripJsonTest» where
   srcDir := "test"
   roots := #[`GripJsonTest]
 
+@[test_driver]
 lean_exe «tests» where
   root := `Tests
   srcDir := "test"
