@@ -42,7 +42,6 @@ theorem foldlM_loop_eq {β : Type} (f : β → UInt8 → β) (arr : ByteArray)
     have hlt : j < arr.size := by omega
     have hget : arr[j] = arr.data.toList[j]'hjt := by
       rw [ByteArray.getElem_eq_getElem_data, Array.getElem_toList]
-      rfl
     rw [dif_pos hlt]
     show ByteArray.foldlM.loop (m := Id) (fun x y => pure (f x y)) arr arr.size h n (j + 1)
         (f b arr[j]) = _
@@ -98,7 +97,6 @@ theorem getElem!_eq_toList (arr : ByteArray) (j : Nat) : arr[j]! = arr.data.toLi
   · have hj : j < arr.data.toList.length := by rw [Array.length_toList, ByteArray.size_data]; omega
     rw [getElem!_pos arr j h, ByteArray.getElem_eq_getElem_data, ← Array.getElem_toList,
       getElem!_pos _ j hj]
-    rfl
   · have hj : ¬ j < arr.data.toList.length := by
       rw [Array.length_toList, ByteArray.size_data]; omega
     rw [getElem!_neg arr j (by omega), getElem!_neg _ j hj]
