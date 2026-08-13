@@ -259,6 +259,17 @@ def oscBody (self : GParser conditional Unit) : GParser conditional Unit where
       · exact absurd h (by simp)
       · simp only [ParseResult.ok.injEq] at h; omega
     · exact absurd h (by simp)
+  fwit := by
+    intro arr q e hq h
+    split at h
+    · split at h
+      · simp only [ParseResult.error.injEq] at h
+        subst h
+        exact ⟨Nat.le_refl q, hq⟩
+      · exact absurd h (by simp)
+    · simp only [ParseResult.error.injEq] at h
+      subst h
+      exact ⟨Nat.le_refl q, hq⟩
 
 -- Acceptance flips with the fuel's parity: fuel 2 rejects, fuel 3 accepts at offset 1. No single
 -- fuel bound is complete for this non-guarded body, so `fixFuel_complete` genuinely needs
