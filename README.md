@@ -1,4 +1,4 @@
-# grip-json
+# lean-grip-json
 
 [![CI](https://github.com/jonaprieto/lean-grip-json/actions/workflows/ci.yml/badge.svg)](https://github.com/jonaprieto/lean-grip-json/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/jonaprieto/lean-grip-json?display_name=tag&sort=semver)](https://github.com/jonaprieto/lean-grip-json/releases)
@@ -22,6 +22,18 @@ import GripJson
 Numbers are represented exactly as a mantissa and decimal exponent; parsing never rounds through
 `Float`. Strings validate UTF-8 and decode JSON escapes, including surrogate pairs. The parser
 returns positioned `Grip.ParseError` values on failure.
+
+## Status and review
+
+These libraries are actively evolving and are developed with AI assistance and human review.
+CI and machine-checked proofs provide useful evidence, but do not guarantee correctness,
+soundness, portability, performance, or suitability for every use case. Validate behavior
+and assumptions before relying on a release.
+
+Reviewer feedback is welcome, especially on correctness, proofs, API design, usability,
+portability, performance, documentation, and real-world use. Please use the
+[issue tracker](https://github.com/jonaprieto/lean-grip-json/issues) or open a PR with a
+reproducible example and the expected behavior.
 
 ## Install
 
