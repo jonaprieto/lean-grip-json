@@ -892,11 +892,7 @@ theorem value_run_at : ∀ (v : Json) (buf : ByteArray) (q : Nat),
         obtain ⟨e, hval_err⟩ : ∃ e, Grip.Json.value.run buf (q + 1) = .error e := by
           rw [Grip.Json.value, fix_run_unroll]; simp only [Grip.Json.valueBody]
           rw [wsDispatch_run_stop _ buf (q + 1) hq1lt hws1, hbuf1]
-          simp only [Ascii.lbrace, Ascii.lbracket, Ascii.quote, Ascii.dash]
-          rw [if_neg (by decide), if_neg (by decide), if_neg (by decide),
-            if_neg (by decide), if_neg (by decide), if_neg (by decide),
-            if_neg (by decide)]
-          simp [clampAdvance, GParser.label, GParser.map, GParser.satisfy]
+          simp [hbuf1, clampAdvance, GParser.label, GParser.map, GParser.satisfy]
         have hs1 : scanFwd buf Ascii.isWs (q + 1) = q + 1 := by
           rw [scanFwd, dif_pos hq1lt, if_neg (by rw [hws1]; decide)]
         simp only [Grip.Json.containerBody]
@@ -1009,7 +1005,7 @@ theorem value_run_at : ∀ (v : Json) (buf : ByteArray) (q : Nat),
     simp only [Ascii.lbrace, Ascii.lbracket]
     have h_notbrace : ¬ ((buf[q] == (123 : UInt8)) = true) := by rw [hbufq]; decide
     have h_bracket  :   ((buf[q] == (91  : UInt8)) = true) := by rw [hbufq]; decide
-    rw [if_neg h_notbrace, if_pos h_bracket]
+    simp only [if_neg h_notbrace, if_pos h_bracket]
     rw [seqR_run _ _ buf q () (q + 1) (Json.arr xs) _ hch harr_map]
     exact clampAdvance_ok buf q (by omega) (by omega)
   | .obj kvs, buf, q, hq, hmatch, hstop => by
@@ -1476,7 +1472,7 @@ theorem value_run_at : ∀ (v : Json) (buf : ByteArray) (q : Nat),
     rw [wsDispatch_run_stop _ buf q hqlt hws_buf]
     simp only [Ascii.lbrace]
     have h_brace : ((buf[q] == (123 : UInt8)) = true) := by rw [hbufq]; decide
-    rw [if_pos h_brace]
+    simp only [if_pos h_brace]
     rw [seqR_run _ _ buf q () (q + 1) (Json.obj kvs) _ hch hobj_map]
     exact clampAdvance_ok buf q (by omega) (by omega)
 termination_by v => sizeOf v
