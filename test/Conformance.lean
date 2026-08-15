@@ -27,8 +27,9 @@ missing proof -- it does not replace one, but a divergence now fails CI instead 
 quietly.
 
 Grammar-strict ceiling (see bench/RESULTS.md):
-some invalid-UTF-8 `n_` files are accepted (`nAllowAccept`), and deep-nesting `n_`/`i_` files
-need a raised stack (both `fix` and `Grip.Json.parse` recurse on the Lean stack); the runner
+the validator treats bytes at least 0x80 inside strings as opaque, but the current corpus's
+invalid-UTF-8 `n_` files are still rejected. Deep-nesting `n_`/`i_` files need a raised
+stack (both `fix` and `Grip.Json.parse` recurse on the Lean stack); the runner
 scripts (`parsers/test_grip.sh`, CI) raise it to the process's hard cap rather than excluding
 those files, so the corpus runs to completion here.
 
@@ -56,10 +57,8 @@ def acceptsDom (arr : ByteArray) : Bool :=
   | .ok _    => true
   | .error _ => false
 
-/-- Invalid-UTF-8 `n_` files that grip accepts under the grammar-strict ceiling (no UTF-8
-validation). Each is an expected, documented acceptance, not a failure. Shrinking this list
-later (a UTF-8 upgrade) is a strict improvement. Shared by both parsers: neither validates
-UTF-8. -/
+/-- Reserved allow-list for invalid-UTF-8 `n_` files. It is empty for the current corpus:
+those files are rejected by both parsers. -/
 def nAllowAccept : List String := []
 
 private def classify (name : String) (accepted : Bool) :
