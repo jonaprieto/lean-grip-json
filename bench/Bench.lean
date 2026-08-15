@@ -53,6 +53,7 @@ structure Stats where
   min : Float
   median : Float
 
+-- Report the conventional median: for an even sample count, average the two middle values.
 def sampleMs (reps : Nat) (act : Nat → Nat) : IO Stats := do
   let mut samples : Array Float := #[]
   for i in [0:reps] do
@@ -62,15 +63,32 @@ def sampleMs (reps : Nat) (act : Nat → Nat) : IO Stats := do
     samples := samples.push (Float.ofNat (t1 - t0) / 1000000.0)
   let sorted := samples.qsort (· < ·)
   if sorted.isEmpty then return { min := 0.0, median := 0.0 }
-  return { min := sorted[0]!, median := sorted[sorted.size / 2]! }
+  let mid := sorted.size / 2
+  let median := if sorted.size % 2 == 0 then
+    (sorted[mid - 1]! + sorted[mid]!) / 2.0
+  else
+    sorted[mid]!
+  return { min := sorted[0]!, median := median }
 
-def benchJson (name : String) (src : ByteArray) (p : ByteArray → Nat) : IO Unit := do
+def benchJson
+    (name : String)
+    (src : ByteArray)
+    (expected : Nat)
+    (p : ByteArray → Nat) : IO Unit := do
   let count := p src
+  if count != expected then
+    throw <| IO.userError s!"{name}: expected {expected}, got {count}"
   let s ← sampleMs 20 (fun i => p (barrier i src))
   IO.println s!"{name} count={count} ms={s.min} med={s.median}"
 
-def benchJsonString (name : String) (src : String) (p : String → Nat) : IO Unit := do
+def benchJsonString
+    (name : String)
+    (src : String)
+    (expected : Nat)
+    (p : String → Nat) : IO Unit := do
   let count := p src
+  if count != expected then
+    throw <| IO.userError s!"{name}: expected {expected}, got {count}"
   let s ← sampleMs 20 (fun i => p (barrierStr i src))
   IO.println s!"{name} count={count} ms={s.min} med={s.median} (DOM build)"
 
@@ -80,11 +98,11 @@ def main (args : List String) : IO Unit := do
     let src ← IO.FS.readBinFile file
     IO.println s!"count={parseJson src}"
     return
-  for (name, path) in [("canada", "bench/data/canada.json"),
-                       ("citm", "bench/data/citm_catalog.json"),
-                       ("twitter", "bench/data/twitter.json")] do
+  for (name, path, expected) in [("canada", "bench/data/canada.json", 111130),
+                                 ("citm", "bench/data/citm_catalog.json", 16390),
+                                 ("twitter", "bench/data/twitter.json", 11600)] do
     let bytes ← IO.FS.readBinFile path
     let string ← IO.FS.readFile path
-    benchJson s!"grip {name}" bytes parseJson
-    benchJson s!"grip.json {name}" bytes parseGripJson
-    benchJsonString s!"lean.json {name}" string parseLeanJson
+    benchJson s!"grip {name}" bytes expected parseJson
+    benchJson s!"grip.json {name}" bytes expected parseGripJson
+    benchJsonString s!"lean.json {name}" string expected parseLeanJson

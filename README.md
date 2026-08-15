@@ -25,8 +25,8 @@ returns positioned `Grip.ParseError` values on failure.
 
 ## Status and review
 
-These libraries are actively evolving and are developed with AI assistance and human review.
-CI and machine-checked proofs provide useful evidence, but do not guarantee correctness,
+These libraries are actively evolving. CI and machine-checked proofs provide useful evidence,
+but do not guarantee correctness,
 soundness, portability, performance, or suitability for every use case. Validate behavior
 and assumptions before relying on a release.
 
@@ -43,19 +43,21 @@ reproducible example and the expected behavior.
 
 ```lean
 require «grip-json» from git
-  "https://github.com/jonaprieto/lean-grip-json.git" @ "v0.1.2"
+  "https://github.com/jonaprieto/lean-grip-json.git" @ "v0.1.5"
 ```
 
 ## Build and verification
 
 ```sh
 lake build GripJson GripJsonTest Examples tests demo readme conformance bench
-lake exe conformance
+bash tools/run-conformance.sh
+lake exe bench
 ```
 
 The checked-in JSONTestSuite corpus gates grammar behavior. The benchmark keeps separate rows for
 Grip's allocation-light validator, the Grip DOM parser, Lean's standard DOM parser, and the
-cross-language reference harnesses.
+cross-language reference harnesses. Only the validator is the strict no-DOM cross-language task;
+the DOM rows are reported as local comparison context.
 
 ## License
 

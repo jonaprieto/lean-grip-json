@@ -1,7 +1,9 @@
-# Cross-library JSON benchmark — shared task spec (every harness MUST match this)
+# Cross-library JSON benchmark — shared validator task spec
 
-All harnesses implement the *same* task so the comparison is fair. Counts are the correctness
-gate: a harness whose counts differ is a different (unfair) task and must be fixed.
+Cross-language validator harnesses implement the same task so their comparison is fair. Counts
+are the correctness gate: a harness whose counts differ is a different (unfair) task and must be
+fixed. The Lean matrix harness also reports DOM-building rows for local context; those rows are
+not part of this no-DOM cross-language task.
 
 ## The task: strict RFC-8259 validate + count leaf scalars (NO DOM)
 
@@ -50,7 +52,7 @@ Idiomatic, well-written use of the library's OWN combinators. Not a strawman, an
 hand-rolled byte scanner that bypasses the library — the point is to benchmark the LIBRARY at its
 best on this task. No DOM.
 
-## CLI
+## CLI for validator and cross-language harnesses
 
 Accept the dataset path as `argv[1]`; preload it into memory (bytes), time 20 in-process
 runs over the preloaded bytes (one untimed warmup first), and print exactly one line:
@@ -60,6 +62,10 @@ runs over the preloaded bytes (one untimed warmup first), and print exactly one 
 `best_ms` is the minimum of the 20 samples, `med_ms` the median. Use a monotonic clock
 and a barrier / `black_box` / volatile so the optimizer cannot elide the parse. Build
 optimized (Haskell `-O2`, Rust `--release`, OCaml dune release; flambda if available).
+
+The Lean matrix command is intentionally separate: `lake exe bench` loops over the three
+vendored inputs and reports the validator plus two DOM workloads. It is not required to obey
+the one-path/one-line cross-language CLI above.
 
 ## Timing note
 
