@@ -70,14 +70,22 @@ def sampleMs (reps : Nat) (act : Nat → Nat) : IO Stats := do
     sorted[mid]!
   return { min := sorted[0]!, median := median }
 
-def benchJson (name : String) (src : ByteArray) (expected : Nat) (p : ByteArray → Nat) : IO Unit := do
+def benchJson
+    (name : String)
+    (src : ByteArray)
+    (expected : Nat)
+    (p : ByteArray → Nat) : IO Unit := do
   let count := p src
   if count != expected then
     throw <| IO.userError s!"{name}: expected {expected}, got {count}"
   let s ← sampleMs 20 (fun i => p (barrier i src))
   IO.println s!"{name} count={count} ms={s.min} med={s.median}"
 
-def benchJsonString (name : String) (src : String) (expected : Nat) (p : String → Nat) : IO Unit := do
+def benchJsonString
+    (name : String)
+    (src : String)
+    (expected : Nat)
+    (p : String → Nat) : IO Unit := do
   let count := p src
   if count != expected then
     throw <| IO.userError s!"{name}: expected {expected}, got {count}"
