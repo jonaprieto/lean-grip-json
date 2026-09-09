@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.6 — 2026-09-08
+
+- Support Lean v4.33.1 and refresh Grip to v0.3.5.
+- Update the Mathlib-backed property suite to v4.33.1.
+- Clarify AI-assisted development.
+
 ## 0.1.5 — 2026-08-13
 
 - Document OATP as a related consumer.
