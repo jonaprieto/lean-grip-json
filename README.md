@@ -23,6 +23,11 @@ Numbers are represented exactly as a mantissa and decimal exponent; parsing neve
 `Float`. Strings validate UTF-8 and decode JSON escapes, including surrogate pairs. The parser
 returns positioned `Grip.ParseError` values on failure.
 
+## Problem
+
+Lean programs need JSON parsing that preserves exact numbers, validates the full format, and
+reports where invalid input occurs.
+
 ## Development
 
 This project is maintained by its author with AI-assisted development tools.
