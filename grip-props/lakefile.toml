@@ -12,7 +12,7 @@ globs = ["GripProps", "GripProps.+"]
 [[require]]
 name = "grip"
 git = "https://github.com/jonaprieto/lean-grip.git"
-rev = "v0.3.5"
+rev = "v0.3.6"
 
 [[require]]
 name = "grip-json"

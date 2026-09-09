@@ -6,7 +6,7 @@ package «grip-json» where
   leanOptions := #[⟨`autoImplicit, false⟩, ⟨`relaxedAutoImplicit, false⟩]
 
 require grip from git
-  "https://github.com/jonaprieto/lean-grip.git" @ "v0.3.5"
+  "https://github.com/jonaprieto/lean-grip.git" @ "v0.3.6"
 
 @[default_target]
 lean_lib «GripJson» where
