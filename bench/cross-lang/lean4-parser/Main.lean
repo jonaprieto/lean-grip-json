@@ -119,7 +119,8 @@ end
 /-- Top-level entry: parse one JSON value from a String -/
 def parse
     (s : String)
-    : Option Nat :=
+    : Option Nat
+    :=
   match (ws *> L4pJsonChar.value).run s.toSlice with
   | .ok _ n => some n
   | .error _ _ => none
@@ -135,7 +136,10 @@ end L4pJsonChar
   | some n => n
   | none   => 0
 
-def sampleMs (reps : Nat) (act : Nat → Nat) : IO (Float × Float) := do
+def sampleMs
+    (reps : Nat)
+    (act : Nat → Nat)
+    : IO (Float × Float) := do
   let mut samples : Array Float := #[]
   for i in [0:reps] do
     let t0 ← IO.monoNanosNow
@@ -145,7 +149,9 @@ def sampleMs (reps : Nat) (act : Nat → Nat) : IO (Float × Float) := do
   let sorted := samples.qsort (· < ·)
   return (sorted[0]!, sorted[sorted.size / 2]!)
 
-def main (args : List String) : IO Unit := do
+def main
+    (args : List String)
+    : IO Unit := do
   -- Read as String (Char-level parser operates on String). Dataset path is argv[1].
   let file := args.getD 0 "/Users/jonaprieto/research/lean-grip/bench/data/canada.json"
   let base := (System.FilePath.mk file).fileName.getD file

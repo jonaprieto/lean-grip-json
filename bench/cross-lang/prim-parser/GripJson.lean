@@ -42,8 +42,7 @@ open Graded
 -- ρ = Nat because grecur (the single fixpoint) returns Nat (leaf count).
 -- ---------------------------------------------------------------------------
 
-def gJson
-    : G Nat conditional Nat :=
+def gJson : G Nat conditional Nat :=
   -- Byte predicates (inlined for performance)
   let isDigit    : UInt8 → Bool := fun b => 48 ≤ b.toNat && b.toNat ≤ 57
   let isDigit19  : UInt8 → Bool := fun b => 49 ≤ b.toNat && b.toNat ≤ 57
@@ -184,7 +183,8 @@ def isWs (b : UInt8) : Bool := b == 32 || b == 9 || b == 10 || b == 13
 
 def runJson
     (arr : ByteArray)
-    : Option Nat :=
+    : Option Nat
+    :=
   let fuel := arr.size * 64 + 64
   match G.run arr gJson fuel gJson 0 with
   | .ok v pos =>
@@ -198,7 +198,10 @@ def runJson
 -- Pattern from JCanada.lean: sink.modify forces `n`, if-check prevents elision.
 -- ---------------------------------------------------------------------------
 
-def gripSampleMs (reps : Nat) (arr : ByteArray) : IO (Float × Float) := do
+def gripSampleMs
+    (reps : Nat)
+    (arr : ByteArray)
+    : IO (Float × Float) := do
   let sink ← IO.mkRef (0 : Nat)
   let mut samples : Array Nat := #[]
   for _ in [0:reps] do
@@ -214,10 +217,13 @@ def gripSampleMs (reps : Nat) (arr : ByteArray) : IO (Float × Float) := do
 
 def gripBasename
     (path : String)
-    : String :=
+    : String
+    :=
   (path.splitOn "/").getLast?.getD path
 
-def main (args : List String) : IO Unit := do
+def main
+    (args : List String)
+    : IO Unit := do
   let pathStr : String := match args with
     | p :: _ => p
     | [] => "/Users/jonaprieto/research/lean-grip/bench/data/canada.json"

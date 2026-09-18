@@ -24,7 +24,8 @@ open Parser
 private
 def keyword
     (s : String)
-    : Parser Error conditional PUnit :=
+    : Parser Error conditional PUnit
+    :=
   lexeme (string s)
 
 private def stringLit : Parser Error conditional String := gdo
@@ -34,10 +35,7 @@ private def stringLit : Parser Error conditional String := gdo
   return String.ofList cs
 
 -- Characters that can appear inside a JSON number (after the first char).
-private
-def isNumChar
-    (c : Char)
-    : Bool :=
+private def isNumChar (c : Char) : Bool :=
   c.isDigit || c == '.' || c == 'e' || c == 'E' || c == '+' || c == '-'
 
 -- Parse a JSON number: require '-' or digit, then consume all number chars.
@@ -49,8 +47,7 @@ private def jsonNumRaw : Parser Error conditional PUnit := gdo
 -- ── Count-only JSON parser ────────────────────────────────────────────────
 
 /-- Parse a JSON value; return its leaf-scalar count. -/
-def jsonCount
-    : Parser Error conditional Nat :=
+def jsonCount : Parser Error conditional Nat :=
   fix (fun self =>
     let jnull  : Parser Error conditional Nat := 1 <$ᵍ keyword "null"
     let jbool  : Parser Error conditional Nat :=
@@ -87,9 +84,7 @@ Char decoding happens per token in the parser). -/
 `prim-parser <basename> count=<n> ...` line shape the sibling harnesses print, so
 `bench/run-all.sh`'s shell-level `gate()` can independently verify this harness's count
 by matching on the dataset name in the line, the same way it gates every other harness. -/
-def basename
-    (path : String)
-    : String :=
+def basename (path : String) : String :=
   (path.splitOn "/").getLast?.getD path
 
 def main (args : List String) : IO UInt32 := do
