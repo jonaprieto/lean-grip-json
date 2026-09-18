@@ -26,24 +26,35 @@ open Grip.Json.Decode Grip.Json.Json
 namespace GripProps.Leaf
 
 /-- `foldl` over a `flatMap`: fold `f`, for each element, over that element's expansion. -/
-theorem foldl_flatMap {α β γ : Type} (f : β → α → β) (init : β) (l : List γ)
-    (g : γ → List α) :
-    (l.flatMap g).foldl f init = l.foldl (fun a x => (g x).foldl f a) init := by
+theorem foldl_flatMap
+    {α β γ : Type}
+    (f : β → α → β)
+    (init : β)
+    (l : List γ)
+    (g : γ → List α)
+    : (l.flatMap g).foldl f init = l.foldl (fun a x => (g x).foldl f a) init := by
   induction l generalizing init with
   | nil => simp
   | cons h t ih => simp [List.flatMap_cons, List.foldl_append, ih]
 
 /-- `hexValue` inverts `hexDigit` on a single hex-digit value. -/
-theorem hexValue_hexDigit (k : Nat) (hk : k < 16) :
-    Grip.Ascii.hexValue (UInt8.ofNat (hexDigit k).toNat) = k := by
+theorem hexValue_hexDigit
+    (k : Nat)
+    (hk : k < 16)
+    : Grip.Ascii.hexValue (UInt8.ofNat (hexDigit k).toNat) = k := by
   interval_cases k <;> decide
 
 /-- Folding `uStep` over the escape of one character, from a clean state, appends exactly that
 character to the output and leaves the state clean. The `\u00XX` arm resets `uAcc`, so a clean
 `uAcc` (`ha`) is part of the precondition threaded through the fold. -/
-theorem foldl_escapeChar (st : UState) (c : Char)
-    (he : st.esc = false) (hu : st.uLeft = 0) (hh : st.hi = 0) (ha : st.uAcc = 0) :
-    List.foldl uStep st (escapeChar c) = { st with out := st.out.push c } := by
+theorem foldl_escapeChar
+    (st : UState)
+    (c : Char)
+    (he : st.esc = false)
+    (hu : st.uLeft = 0)
+    (hh : st.hi = 0)
+    (ha : st.uAcc = 0)
+    : List.foldl uStep st (escapeChar c) = { st with out := st.out.push c } := by
   unfold escapeChar
   split_ifs with h1 h2 h3 h4 h5 h6 h7 h8 <;>
     simp_all [uStep, List.foldl_cons, List.foldl_nil]
@@ -58,9 +69,15 @@ theorem foldl_escapeChar (st : UState) (c : Char)
 
 /-- The core invariant: folding the per-character escape-decode over `cs`, from a clean state,
 appends exactly `cs` to the output (tracked through `String.toList`). -/
-theorem out_toList_foldl (cs : List Char) (st : UState)
-    (he : st.esc = false) (hu : st.uLeft = 0) (hh : st.hi = 0) (ha : st.uAcc = 0) :
-    (cs.foldl (fun st c => (escapeChar c).foldl uStep st) st).out.toList = st.out.toList ++ cs := by
+theorem out_toList_foldl
+    (cs : List Char)
+    (st : UState)
+    (he : st.esc = false)
+    (hu : st.uLeft = 0)
+    (hh : st.hi = 0)
+    (ha : st.uAcc = 0)
+    : (cs.foldl (fun st c => (escapeChar c).foldl uStep st) st).out.toList =
+      st.out.toList ++ cs := by
   induction cs generalizing st with
   | nil => simp
   | cons c cs ih =>
@@ -71,7 +88,9 @@ theorem out_toList_foldl (cs : List Char) (st : UState)
 
 /-- **String-escaping round-trip.** Escaping a string and decoding the escapes is the identity.
 This is the leaf Dafny's high-level JSON API leaves unverified. -/
-theorem unescape_escape (s : String) : unescape (escape s) = s := by
+theorem unescape_escape
+    (s : String)
+    : unescape (escape s) = s := by
   unfold unescape escape
   rw [String.toList_ofList, foldl_flatMap]
   apply String.toList_inj.mp

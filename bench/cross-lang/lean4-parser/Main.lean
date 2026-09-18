@@ -117,7 +117,9 @@ protected partial def array : L4pJsonChar.P Nat := do
 end
 
 /-- Top-level entry: parse one JSON value from a String -/
-def parse (s : String) : Option Nat :=
+def parse
+    (s : String)
+    : Option Nat :=
   match (ws *> L4pJsonChar.value).run s.toSlice with
   | .ok _ n => some n
   | .error _ _ => none
