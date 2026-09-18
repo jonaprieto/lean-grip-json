@@ -42,7 +42,8 @@ open Graded
 -- ρ = Nat because grecur (the single fixpoint) returns Nat (leaf count).
 -- ---------------------------------------------------------------------------
 
-def gJson : G Nat conditional Nat :=
+def gJson
+    : G Nat conditional Nat :=
   -- Byte predicates (inlined for performance)
   let isDigit    : UInt8 → Bool := fun b => 48 ≤ b.toNat && b.toNat ≤ 57
   let isDigit19  : UInt8 → Bool := fun b => 49 ≤ b.toNat && b.toNat ≤ 57
@@ -181,7 +182,9 @@ def gJson : G Nat conditional Nat :=
 
 def isWs (b : UInt8) : Bool := b == 32 || b == 9 || b == 10 || b == 13
 
-def runJson (arr : ByteArray) : Option Nat :=
+def runJson
+    (arr : ByteArray)
+    : Option Nat :=
   let fuel := arr.size * 64 + 64
   match G.run arr gJson fuel gJson 0 with
   | .ok v pos =>
@@ -209,7 +212,9 @@ def gripSampleMs (reps : Nat) (arr : ByteArray) : IO (Float × Float) := do
   return (Float.ofNat sorted[0]! / 1000000.0,
     Float.ofNat sorted[sorted.size / 2]! / 1000000.0)
 
-def gripBasename (path : String) : String :=
+def gripBasename
+    (path : String)
+    : String :=
   (path.splitOn "/").getLast?.getD path
 
 def main (args : List String) : IO Unit := do

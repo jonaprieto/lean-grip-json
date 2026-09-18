@@ -19,13 +19,19 @@ open Grip
 
 -- partiality: these traversals deliberately mirror the two DOM implementations being measured;
 -- changing them to a different traversal would change the benchmark's work profile.
-partial def leanJsonLeaves : Lean.Json → Nat
+partial
+def leanJsonLeaves
+    : Lean.Json →
+      Nat
   | .null | .bool _ | .num _ | .str _ => 1
   | .arr xs  => xs.foldl (fun a j => a + leanJsonLeaves j) 0
   | .obj kvs => kvs.foldl (fun a _ v => a + leanJsonLeaves v) 0
 
 -- partiality: this mirrors Grip's DOM traversal for the benchmark's like-for-like comparison.
-partial def jsonLeaves : Grip.Json.Json → Nat
+partial
+def jsonLeaves
+    : Grip.Json.Json →
+      Nat
   | .null | .bool _ | .num _ _ | .str _ => 1
   | .arr xs  => xs.foldl (fun a j => a + jsonLeaves j) 0
   | .obj kvs => kvs.foldl (fun a kv => a + jsonLeaves kv.2) 0

@@ -25,16 +25,22 @@ open GripProps.Bytes GripProps.NatDigits
 namespace GripProps.Parse
 
 /-- At the end of the whole input, `eof` succeeds consuming nothing. -/
-theorem eof_run_end (arr : ByteArray) (q : Nat) (hq : arr.size ≤ q) :
-    (GParser.eof).run arr q = .ok () q := by
+theorem eof_run_end
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : arr.size ≤ q)
+    : (GParser.eof).run arr q = .ok () q := by
   simp only [GParser.eof, GParser.label, GParser.notFollowedBy, GParser.satisfy]
   rw [dif_neg (by omega : ¬ q < arr.size)]
 
 /-- `scanFwd` consumes exactly a maximal run of `n` matching bytes ending at a non-match or EOF. -/
-theorem scanFwd_run (arr : ByteArray) (f : UInt8 → Bool) (q n : Nat)
+theorem scanFwd_run
+    (arr : ByteArray)
+    (f : UInt8 → Bool)
+    (q n : Nat)
     (hall : ∀ i, i < n → f arr[q + i]! = true)
-    (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ f arr[q + n]! = false)) :
-    scanFwd arr f q = q + n := by
+    (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ f arr[q + n]! = false))
+    : scanFwd arr f q = q + n := by
   induction n generalizing q with
   | zero =>
     simp only [Nat.add_zero] at hstop ⊢
@@ -58,103 +64,199 @@ theorem scanFwd_run (arr : ByteArray) (f : UInt8 → Bool) (q n : Nat)
     omega
 
 /-- `takeWhile f` consumes a maximal run of `n` matching bytes. -/
-theorem takeWhile_run (f : UInt8 → Bool) (arr : ByteArray) (q n : Nat)
+theorem takeWhile_run
+    (f : UInt8 → Bool)
+    (arr : ByteArray)
+    (q n : Nat)
     (hall : ∀ i, i < n → f arr[q + i]! = true)
-    (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ f arr[q + n]! = false)) :
-    (GParser.takeWhile f).run arr q = .ok n (q + n) := by
+    (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ f arr[q + n]! = false))
+    : (GParser.takeWhile f).run arr q = .ok n (q + n) := by
   simp only [GParser.takeWhile, scanFwd_run arr f q n hall hstop, Nat.add_sub_cancel_left]
 
 variable {α β γ : Type} {g g' : Grade}
 
 /-- `map` on a successful sub-parse. -/
-theorem map_run_ok (h : α → β) (x : GParser g α) (arr : ByteArray) (q : Nat) (a : α) (q' : Nat)
-    (hx : x.run arr q = .ok a q') : (GParser.map h x).run arr q = .ok (h a) q' := by
+theorem map_run_ok
+    (h : α → β)
+    (x : GParser g α)
+    (arr : ByteArray)
+    (q : Nat)
+    (a : α)
+    (q' : Nat)
+    (hx : x.run arr q = .ok a q')
+    : (GParser.map h x).run arr q = .ok (h a) q' := by
   simp only [GParser.map, hx]
 
 /-- `seqR` on two successes keeps the right value. -/
-theorem seqR_run (x : GParser g α) (y : GParser g' β) (arr : ByteArray) (q : Nat) (a : α) (q' : Nat)
-    (b : β) (q'' : Nat) (hx : x.run arr q = .ok a q') (hy : y.run arr q' = .ok b q'') :
-    (GParser.seqR x y).run arr q = .ok b q'' := by
+theorem seqR_run
+    (x : GParser g α)
+    (y : GParser g' β)
+    (arr : ByteArray)
+    (q : Nat)
+    (a : α)
+    (q' : Nat)
+    (b : β)
+    (q'' : Nat)
+    (hx : x.run arr q = .ok a q')
+    (hy : y.run arr q' = .ok b q'')
+    : (GParser.seqR x y).run arr q = .ok b q'' := by
   simp only [GParser.seqR, hx, hy]
 
 /-- `seqL` on two successes keeps the left value. -/
-theorem seqL_run (x : GParser g α) (y : GParser g' β) (arr : ByteArray) (q : Nat) (a : α) (q' : Nat)
-    (b : β) (q'' : Nat) (hx : x.run arr q = .ok a q') (hy : y.run arr q' = .ok b q'') :
-    (GParser.seqL x y).run arr q = .ok a q'' := by
+theorem seqL_run
+    (x : GParser g α)
+    (y : GParser g' β)
+    (arr : ByteArray)
+    (q : Nat)
+    (a : α)
+    (q' : Nat)
+    (b : β)
+    (q'' : Nat)
+    (hx : x.run arr q = .ok a q')
+    (hy : y.run arr q' = .ok b q'')
+    : (GParser.seqL x y).run arr q = .ok a q'' := by
   simp only [GParser.seqL, hx, hy]
 
 /-- `map2` on two successes combines the values. -/
-theorem map2_run (f : α → β → γ) (x : GParser g α) (y : GParser g' β) (arr : ByteArray) (q : Nat)
-    (a : α) (q' : Nat) (b : β) (q'' : Nat)
-    (hx : x.run arr q = .ok a q') (hy : y.run arr q' = .ok b q'') :
-    (GParser.map2 f x y).run arr q = .ok (f a b) q'' := by
+theorem map2_run
+    (f : α → β → γ)
+    (x : GParser g α)
+    (y : GParser g' β)
+    (arr : ByteArray)
+    (q : Nat)
+    (a : α)
+    (q' : Nat)
+    (b : β)
+    (q'' : Nat)
+    (hx : x.run arr q = .ok a q')
+    (hy : y.run arr q' = .ok b q'')
+    : (GParser.map2 f x y).run arr q = .ok (f a b) q'' := by
   simp only [GParser.map2, hx, hy]
 
 /-- `captureWith? f p`: `p` succeeds and `f` accepts the consumed range. -/
-theorem captureWith?_run {δ : Type} (f : ByteArray → Nat → Nat → Option δ) (p : GParser g α)
-    (arr : ByteArray) (q : Nat) (a : α) (q' : Nat) (d : δ)
-    (hp : p.run arr q = .ok a q') (hf : f arr q q' = some d) :
-    (GParser.captureWith? f p).run arr q = .ok d q' := by
+theorem captureWith?_run
+    {δ : Type}
+    (f : ByteArray → Nat → Nat → Option δ)
+    (p : GParser g α)
+    (arr : ByteArray)
+    (q : Nat)
+    (a : α)
+    (q' : Nat)
+    (d : δ)
+    (hp : p.run arr q = .ok a q')
+    (hf : f arr q q' = some d)
+    : (GParser.captureWith? f p).run arr q = .ok d q' := by
   simp only [GParser.captureWith?, hp, hf]
 
 /-- `alt`, left branch succeeds. -/
-theorem alt_run_left {ge gc ge' gc' : Modality} (x : GParser ⟨ge, gc⟩ α) (y : GParser ⟨ge', gc'⟩ α)
-    (arr : ByteArray) (q : Nat) (a : α) (q' : Nat) (hx : x.run arr q = .ok a q') :
-    (GParser.alt x y).run arr q = .ok a q' := by
+theorem alt_run_left
+    {ge gc ge' gc' : Modality}
+    (x : GParser ⟨ge, gc⟩ α)
+    (y : GParser ⟨ge', gc'⟩ α)
+    (arr : ByteArray)
+    (q : Nat)
+    (a : α)
+    (q' : Nat)
+    (hx : x.run arr q = .ok a q')
+    : (GParser.alt x y).run arr q = .ok a q' := by
   simp only [GParser.alt, hx]
 
 /-- `alt`, left fails, right succeeds. -/
-theorem alt_run_right {ge gc ge' gc' : Modality} (x : GParser ⟨ge, gc⟩ α)
-    (y : GParser ⟨ge', gc'⟩ α) (arr : ByteArray) (q : Nat) (ex : Err) (a : α) (q' : Nat)
-    (hx : x.run arr q = .error ex) (hy : y.run arr q = .ok a q') :
-    (GParser.alt x y).run arr q = .ok a q' := by
+theorem alt_run_right
+    {ge gc ge' gc' : Modality}
+    (x : GParser ⟨ge, gc⟩ α)
+    (y : GParser ⟨ge', gc'⟩ α)
+    (arr : ByteArray)
+    (q : Nat)
+    (ex : Err)
+    (a : α)
+    (q' : Nat)
+    (hx : x.run arr q = .error ex)
+    (hy : y.run arr q = .ok a q')
+    : (GParser.alt x y).run arr q = .ok a q' := by
   simp only [GParser.alt, hx, hy]
 
 /-- `satisfy f` on an in-bounds byte satisfying `f` (stated with `getElem!`). -/
-theorem satisfy_run! (f : UInt8 → Bool) (arr : ByteArray) (q : Nat) (hq : q < arr.size)
-    (hf : f arr[q]! = true) : (GParser.satisfy f).run arr q = .ok arr[q]! (q + 1) := by
+theorem satisfy_run!
+    (f : UInt8 → Bool)
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : q < arr.size)
+    (hf : f arr[q]! = true)
+    : (GParser.satisfy f).run arr q = .ok arr[q]! (q + 1) := by
   rw [getElem!_pos arr q hq] at hf ⊢
   simp only [GParser.satisfy, dif_pos hq, hf, if_true]
 
 /-- `byte c` on a matching in-bounds byte (stated with `getElem!`). -/
-theorem byte_run! (c : UInt8) (arr : ByteArray) (q : Nat) (hq : q < arr.size)
-    (hc : arr[q]! = c) : (GParser.byte c).run arr q = .ok () (q + 1) := by
+theorem byte_run!
+    (c : UInt8)
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : q < arr.size)
+    (hc : arr[q]! = c)
+    : (GParser.byte c).run arr q = .ok () (q + 1) := by
   rw [getElem!_pos arr q hq] at hc
   simp only [GParser.byte, dif_pos hq, hc, beq_self_eq_true, if_true]
 
 /-- `byte c` fails at an in-bounds non-matching byte. -/
-theorem byte_run_fail! (c : UInt8) (arr : ByteArray) (q : Nat) (hq : q < arr.size)
-    (hc : arr[q]! ≠ c) : (GParser.byte c).run arr q = .error ⟨q, []⟩ := by
+theorem byte_run_fail!
+    (c : UInt8)
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : q < arr.size)
+    (hc : arr[q]! ≠ c)
+    : (GParser.byte c).run arr q = .error ⟨q, []⟩ := by
   rw [getElem!_pos arr q hq] at hc
   simp only [GParser.byte, dif_pos hq]
   rw [if_neg (by simpa [beq_iff_eq] using hc)]
 
 /-- `byte c` fails at end of input. -/
-theorem byte_run_end (c : UInt8) (arr : ByteArray) (q : Nat) (hq : arr.size ≤ q) :
-    (GParser.byte c).run arr q = .error ⟨q, []⟩ := by
+theorem byte_run_end
+    (c : UInt8)
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : arr.size ≤ q)
+    : (GParser.byte c).run arr q = .error ⟨q, []⟩ := by
   simp only [GParser.byte, dif_neg (Nat.not_lt.mpr hq)]
 
 /-- `satisfy f` fails at an in-bounds non-satisfying byte. -/
-theorem satisfy_run_fail! (f : UInt8 → Bool) (arr : ByteArray) (q : Nat) (hq : q < arr.size)
-    (hf : f arr[q]! = false) : (GParser.satisfy f).run arr q = .error ⟨q, []⟩ := by
+theorem satisfy_run_fail!
+    (f : UInt8 → Bool)
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : q < arr.size)
+    (hf : f arr[q]! = false)
+    : (GParser.satisfy f).run arr q = .error ⟨q, []⟩ := by
   rw [getElem!_pos arr q hq] at hf
   simp only [GParser.satisfy, dif_pos hq]; rw [if_neg (by simp [hf])]
 
 /-- `satisfy f` fails at end of input. -/
-theorem satisfy_run_end (f : UInt8 → Bool) (arr : ByteArray) (q : Nat) (hq : arr.size ≤ q) :
-    (GParser.satisfy f).run arr q = .error ⟨q, []⟩ := by
+theorem satisfy_run_end
+    (f : UInt8 → Bool)
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : arr.size ≤ q)
+    : (GParser.satisfy f).run arr q = .error ⟨q, []⟩ := by
   simp only [GParser.satisfy, dif_neg (Nat.not_lt.mpr hq)]
 
 /-- `seqR`, left fails. -/
-theorem seqR_run_fail_left (x : GParser g α) (y : GParser g' β) (arr : ByteArray) (q : Nat)
-    (e : Err) (hx : x.run arr q = .error e) : (GParser.seqR x y).run arr q = .error e := by
+theorem seqR_run_fail_left
+    (x : GParser g α)
+    (y : GParser g' β)
+    (arr : ByteArray)
+    (q : Nat)
+    (e : Err)
+    (hx : x.run arr q = .error e)
+    : (GParser.seqR x y).run arr q = .error e := by
   simp only [GParser.seqR, hx]
 
 /-- `matchBytes` succeeds when `arr`'s bytes from `q` match `bs` from `i`. -/
-theorem matchBytes_true (arr bs : ByteArray) (q i : Nat)
+theorem matchBytes_true
+    (arr bs : ByteArray)
+    (q i : Nat)
     (hsize : q + (bs.size - i) ≤ arr.size)
-    (hmatch : ∀ j, i ≤ j → j < bs.size → arr[q + (j - i)]! = bs[j]!) :
-    Grip.matchBytes arr bs i q = true := by
+    (hmatch : ∀ j, i ≤ j → j < bs.size → arr[q + (j - i)]! = bs[j]!)
+    : Grip.matchBytes arr bs i q = true := by
   rw [Grip.matchBytes]
   split
   · rename_i hi
@@ -170,75 +272,115 @@ termination_by bs.size - i
 decreasing_by omega
 
 /-- `string s` (nonempty) succeeds when `arr`'s bytes from `q` match `s`'s UTF-8. -/
-theorem string_run (s : String) (arr : ByteArray) (q : Nat)
-    (hne : 0 < s.toUTF8.size) (hsize : q + s.toUTF8.size ≤ arr.size)
-    (hmatch : ∀ j, j < s.toUTF8.size → arr[q + j]! = s.toUTF8[j]!) :
-    (GParser.string s).run arr q = .ok () (q + s.toUTF8.size) := by
+theorem string_run
+    (s : String)
+    (arr : ByteArray)
+    (q : Nat)
+    (hne : 0 < s.toUTF8.size)
+    (hsize : q + s.toUTF8.size ≤ arr.size)
+    (hmatch : ∀ j, j < s.toUTF8.size → arr[q + j]! = s.toUTF8[j]!)
+    : (GParser.string s).run arr q = .ok () (q + s.toUTF8.size) := by
   have hmb : Grip.matchBytes arr s.toUTF8 0 q = true :=
     matchBytes_true arr s.toUTF8 q 0 (by simpa using hsize)
       (fun j _ hj => by simpa using hmatch j hj)
   simp only [GParser.string, hmb, if_true, if_pos (show q < q + s.toUTF8.size by omega)]
 
 /-- `optional p`, `p` succeeds. -/
-theorem optional_run_some (p : GParser g α) (arr : ByteArray) (q : Nat) (a : α) (q' : Nat)
-    (hp : p.run arr q = .ok a q') : (GParser.optional p).run arr q = .ok (some a) q' := by
+theorem optional_run_some
+    (p : GParser g α)
+    (arr : ByteArray)
+    (q : Nat)
+    (a : α)
+    (q' : Nat)
+    (hp : p.run arr q = .ok a q')
+    : (GParser.optional p).run arr q = .ok (some a) q' := by
   simp only [GParser.optional]
   exact alt_run_left _ _ arr q (some a) q' (map_run_ok some p arr q a q' hp)
 
 /-- `optional p`, `p` fails without consuming (grade forces same-offset failure); result `none`. -/
-theorem optional_run_none (p : GParser g α) (arr : ByteArray) (q : Nat) (e : Err)
-    (hp : p.run arr q = .error e) : (GParser.optional p).run arr q = .ok none q := by
+theorem optional_run_none
+    (p : GParser g α)
+    (arr : ByteArray)
+    (q : Nat)
+    (e : Err)
+    (hp : p.run arr q = .error e)
+    : (GParser.optional p).run arr q = .ok none q := by
   simp only [GParser.optional, GParser.alt, GParser.map, hp, GParser.pure]
 
 /-- `ws` consumes nothing at a non-whitespace in-bounds byte. -/
-theorem ws_run_stop (arr : ByteArray) (q : Nat) (hq : q < arr.size)
-    (hw : Ascii.isWs arr[q] = false) :
-    (GParser.ws).run arr q = .ok 0 q := by
+theorem ws_run_stop
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : q < arr.size)
+    (hw : Ascii.isWs arr[q] = false)
+    : (GParser.ws).run arr q = .ok 0 q := by
   have : scanFwd arr Ascii.isWs q = q := by rw [scanFwd, dif_pos hq, if_neg (by simp [hw])]
   simp only [GParser.ws, GParser.takeWhile, this, Nat.sub_self]
 
 /-- `ws` consumes nothing at end of input. -/
-theorem ws_run_end (arr : ByteArray) (q : Nat) (hq : arr.size ≤ q) :
-    (GParser.ws).run arr q = .ok 0 q := by
+theorem ws_run_end
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : arr.size ≤ q)
+    : (GParser.ws).run arr q = .ok 0 q := by
   have : scanFwd arr Ascii.isWs q = q := by rw [scanFwd, dif_neg (by omega)]
   simp only [GParser.ws, GParser.takeWhile, this, Nat.sub_self]
 
 /-- `wsDispatch`, with no leading whitespace, runs the parser its `select` picks for the
 current byte. -/
-theorem wsDispatch_run_stop (select : UInt8 → GParser conditional Grip.Json.Json)
-    (arr : ByteArray) (q : Nat) (hq : q < arr.size) (hw : Ascii.isWs arr[q] = false) :
-    (Grip.Json.wsDispatch select).run arr q = (select arr[q]).run arr q := by
+theorem wsDispatch_run_stop
+    (select : UInt8 → GParser conditional Grip.Json.Json)
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : q < arr.size)
+    (hw : Ascii.isWs arr[q] = false)
+    : (Grip.Json.wsDispatch select).run arr q = (select arr[q]).run arr q := by
   have hs : scanFwd arr Ascii.isWs q = q := by rw [scanFwd, dif_pos hq, if_neg (by simp [hw])]
   simp only [Grip.Json.wsDispatch, hs, dif_pos hq]
 
 /-- `wsByte b`, no leading whitespace, matching byte: consume it. -/
-theorem wsByte_run_stop (b : UInt8) (name : String) (arr : ByteArray) (q : Nat)
+theorem wsByte_run_stop
+    (b : UInt8)
+    (name : String)
+    (arr : ByteArray)
+    (q : Nat)
     (hq : q < arr.size)
-    (hw : Ascii.isWs arr[q] = false) (hb : arr[q] = b) :
-    (Grip.Json.wsByte b name).run arr q = .ok () (q + 1) := by
+    (hw : Ascii.isWs arr[q] = false)
+    (hb : arr[q] = b)
+    : (Grip.Json.wsByte b name).run arr q = .ok () (q + 1) := by
   have hs : scanFwd arr Ascii.isWs q = q := by rw [scanFwd, dif_pos hq, if_neg (by simp [hw])]
   simp only [Grip.Json.wsByte, hs, dif_pos hq, hb, beq_self_eq_true, if_true]
 
 /-- One-step unfolding of `fix`: its run is the body applied to the clamped self at the
 bytes-remaining fuel, behind the advance clamp. -/
-theorem fix_run_unroll (f : GParser conditional α → GParser conditional α) (arr : ByteArray)
-    (q : Nat) :
-    (GParser.fix f).run arr q
-      = clampAdvance arr q ((f (GParser.fixSelf f (arr.size - q))).run arr q) := by
+theorem fix_run_unroll
+    (f : GParser conditional α → GParser conditional α)
+    (arr : ByteArray)
+    (q : Nat)
+    : (GParser.fix f).run arr q =
+      clampAdvance arr q ((f (GParser.fixSelf f (arr.size - q))).run arr q) := by
   show clampAdvance arr q (GParser.fixFuel f (arr.size - q + 1) arr q) = _
   rw [GParser.fixFuel_succ]
 
 /-- The advance clamp is the identity on a success that advances within bounds. -/
-theorem clampAdvance_ok (arr : ByteArray) (q : Nat) {v : Grip.Json.Json} {q' : Nat}
-    (h1 : q < q') (h2 : q' ≤ arr.size) :
-    clampAdvance arr q (.ok v q') = .ok v q' := by
+theorem clampAdvance_ok
+    (arr : ByteArray)
+    (q : Nat)
+    {v : Grip.Json.Json}
+    {q' : Nat}
+    (h1 : q < q')
+    (h2 : q' ≤ arr.size)
+    : clampAdvance arr q (.ok v q') = .ok v q' := by
   have h : q < q' ∧ q' ≤ arr.size := ⟨h1, h2⟩
   simp only [clampAdvance, if_pos h]
 
 open Grip.Json Grip.Json.Decode Grip.Json.Json
 
 /-- A `1-9` digit byte is a digit byte. -/
-theorem isDigit19_isDigit {b : UInt8} (h : Ascii.isDigit19 b = true) : Ascii.isDigit b = true := by
+theorem isDigit19_isDigit
+    {b : UInt8}
+    (h : Ascii.isDigit19 b = true)
+    : Ascii.isDigit b = true := by
   have h48 : ((48 : UInt8)).toNat = 48 := by decide
   have h49 : ((49 : UInt8)).toNat = 49 := by decide
   have h57 : ((57 : UInt8)).toNat = 57 := by decide
@@ -247,7 +389,10 @@ theorem isDigit19_isDigit {b : UInt8} (h : Ascii.isDigit19 b = true) : Ascii.isD
   omega
 
 /-- A digit byte is not whitespace. -/
-theorem isDigit_not_ws {b : UInt8} (h : Ascii.isDigit b = true) : Ascii.isWs b = false := by
+theorem isDigit_not_ws
+    {b : UInt8}
+    (h : Ascii.isDigit b = true)
+    : Ascii.isWs b = false := by
   have hb : 48 ≤ b.toNat := by
     have h48 : ((48 : UInt8)).toNat = 48 := by decide
     simp only [Ascii.isDigit, Bool.and_eq_true, decide_eq_true_eq, UInt8.le_iff_toNat_le, h48] at h
@@ -258,10 +403,15 @@ theorem isDigit_not_ws {b : UInt8} (h : Ascii.isDigit b = true) : Ascii.isWs b =
     Bool.or_self]
 
 /-- `takeWhile1 f`: a nonempty maximal run of matching bytes. -/
-theorem takeWhile1_run (f : UInt8 → Bool) (arr : ByteArray) (q n : Nat) (hq : q < arr.size)
-    (hn : 1 ≤ n) (hall : ∀ i, i < n → f arr[q + i]! = true)
-    (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ f arr[q + n]! = false)) :
-    (GParser.takeWhile1 f).run arr q = .ok n (q + n) := by
+theorem takeWhile1_run
+    (f : UInt8 → Bool)
+    (arr : ByteArray)
+    (q n : Nat)
+    (hq : q < arr.size)
+    (hn : 1 ≤ n)
+    (hall : ∀ i, i < n → f arr[q + i]! = true)
+    (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ f arr[q + n]! = false))
+    : (GParser.takeWhile1 f).run arr q = .ok n (q + n) := by
   have hf0 : f arr[q] = true := by
     rw [← getElem!_pos arr q hq]; simpa using hall 0 (by omega)
   show (if h : q < arr.size then
@@ -271,17 +421,25 @@ theorem takeWhile1_run (f : UInt8 → Bool) (arr : ByteArray) (q n : Nat) (hq : 
   exact takeWhile_run f arr q n hall hstop
 
 /-- `intPart` consumes a single leading `0`. -/
-theorem intPart_run_zero (arr : ByteArray) (q : Nat) (hq : q < arr.size) (h0 : arr[q]! = 48) :
-    intPart.run arr q = .ok () (q + 1) := by
+theorem intPart_run_zero
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : q < arr.size)
+    (h0 : arr[q]! = 48)
+    : intPart.run arr q = .ok () (q + 1) := by
   simp only [intPart]
   exact alt_run_left _ _ arr q () (q + 1) (byte_run! (Ascii.code '0') arr q hq (by rw [h0]; decide))
 
 /-- `intPart` consumes a nonzero-leading integer (digit 1-9 then more digits). -/
-theorem intPart_run_nonzero (arr : ByteArray) (q n : Nat) (hq : q < arr.size) (hn : 1 ≤ n)
+theorem intPart_run_nonzero
+    (arr : ByteArray)
+    (q n : Nat)
+    (hq : q < arr.size)
+    (hn : 1 ≤ n)
     (h19 : Ascii.isDigit19 arr[q]! = true)
     (hall : ∀ i, 1 ≤ i → i < n → Ascii.isDigit arr[q + i]! = true)
-    (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ Ascii.isDigit arr[q + n]! = false)) :
-    intPart.run arr q = .ok () (q + n) := by
+    (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ Ascii.isDigit arr[q + n]! = false))
+    : intPart.run arr q = .ok () (q + n) := by
   have hne : arr[q]! ≠ (48 : UInt8) := by
     intro he; rw [he] at h19; exact absurd h19 (by decide)
   simp only [intPart]
@@ -301,11 +459,16 @@ theorem intPart_run_nonzero (arr : ByteArray) (q n : Nat) (hq : q < arr.size) (h
       (seqR_run _ _ arr (q + 1) (n - 1) (q + n) () (q + n) htw rfl)
 
 /-- `frac` consumes `.` then a nonempty digit run. -/
-theorem frac_run (arr : ByteArray) (q n : Nat) (hq : q < arr.size) (hdot : arr[q]! = 46)
-    (hq1 : q + 1 < arr.size) (hn : 2 ≤ n)
+theorem frac_run
+    (arr : ByteArray)
+    (q n : Nat)
+    (hq : q < arr.size)
+    (hdot : arr[q]! = 46)
+    (hq1 : q + 1 < arr.size)
+    (hn : 2 ≤ n)
     (hall : ∀ i, 1 ≤ i → i < n → Ascii.isDigit arr[q + i]! = true)
-    (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ Ascii.isDigit arr[q + n]! = false)) :
-    frac.run arr q = .ok (n - 1) (q + n) := by
+    (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ Ascii.isDigit arr[q + n]! = false))
+    : frac.run arr q = .ok (n - 1) (q + n) := by
   simp only [frac]
   have hch : (GParser.ch '.').run arr q = .ok () (q + 1) :=
     byte_run! (Ascii.code '.') arr q hq (by rw [hdot]; decide)
@@ -320,19 +483,31 @@ theorem frac_run (arr : ByteArray) (q n : Nat) (hq : q < arr.size) (hdot : arr[q
   exact seqR_run _ _ arr q () (q + 1) (n - 1) (q + n) hch htw1
 
 /-- Unfold a `<?>`-labelled parser on a successful sub-parse: the label rewrites failures only. -/
-theorem label_run_ok {g : Grade} {α : Type} (name : String) (p : GParser g α) (arr : ByteArray)
-    (q : Nat) (a : α) (q' : Nat) (h : p.run arr q = .ok a q') :
-    (GParser.label name p).run arr q = .ok a q' := by
+theorem label_run_ok
+    {g : Grade}
+    {α : Type}
+    (name : String)
+    (p : GParser g α)
+    (arr : ByteArray)
+    (q : Nat)
+    (a : α)
+    (q' : Nat)
+    (h : p.run arr q = .ok a q')
+    : (GParser.label name p).run arr q = .ok a q' := by
   simp only [GParser.label, h]
 
 /-- Lift an already-established `number` parse through `value`'s byte dispatch. This keeps
 specialized render-shape proofs focused on the number grammar rather than duplicating dispatch
 reasoning. -/
-theorem value_run_number (arr : ByteArray) (q : Nat) (m : Int) (e n : Nat)
+theorem value_run_number
+    (arr : ByteArray)
+    (q : Nat)
+    (m : Int)
+    (e n : Nat)
     (hq : q < arr.size)
     (hstart : Ascii.isDigit arr[q] = true ∨ arr[q] = Ascii.dash)
-    (hnum : number.run arr q = .ok (Json.num m e) (q + n)) :
-    value.run arr q = .ok (Json.num m e) (q + n) := by
+    (hnum : number.run arr q = .ok (Json.num m e) (q + n))
+    : value.run arr q = .ok (Json.num m e) (q + n) := by
   rcases hstart with hdigit | hdash
   · have hne : ∀ c : UInt8, Ascii.isDigit c = false → ¬ ((arr[q] == c) = true) := fun c hc => by
       rw [beq_iff_eq]
@@ -365,14 +540,23 @@ theorem value_run_number (arr : ByteArray) (q : Nat) (m : Int) (e n : Nat)
 
 /-- `value` parses a nonnegative integer number (`e = 0`). The `hstop` byte after the number is a
 delimiter (not a digit, `.`, or `e`), so the optional fraction/exponent parsers correctly fail. -/
-theorem value_run_num_int (arr : ByteArray) (q : Nat) (m : Int) (_hm : 0 ≤ m) (n : Nat)
-    (hn : 1 ≤ n) (hsize : q + n ≤ arr.size)
-    (hstruct : (n = 1 ∧ arr[q]! = 48) ∨
-      (Ascii.isDigit19 arr[q]! = true ∧ ∀ i, 1 ≤ i → i < n → Ascii.isDigit arr[q + i]! = true))
-    (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ Ascii.isDigit arr[q + n]! = false ∧
-      arr[q + n]! ≠ 46 ∧ Ascii.isExp arr[q + n]! = false))
-    (hdecode : decodeNumberBytes? arr q (q + n) = some (Json.num m 0)) :
-    value.run arr q = .ok (Json.num m 0) (q + n) := by
+theorem value_run_num_int
+    (arr : ByteArray)
+    (q : Nat)
+    (m : Int)
+    (_hm : 0 ≤ m)
+    (n : Nat)
+    (hn : 1 ≤ n)
+    (hsize : q + n ≤ arr.size)
+    (hstruct :
+      (n = 1 ∧ arr[q]! = 48) ∨
+        (Ascii.isDigit19 arr[q]! = true ∧ ∀ i, 1 ≤ i → i < n → Ascii.isDigit arr[q + i]! = true))
+    (hstop :
+      q + n = arr.size ∨
+        (q + n < arr.size ∧ Ascii.isDigit arr[q + n]! = false ∧
+          arr[q + n]! ≠ 46 ∧ Ascii.isExp arr[q + n]! = false))
+    (hdecode : decodeNumberBytes? arr q (q + n) = some (Json.num m 0))
+    : value.run arr q = .ok (Json.num m 0) (q + n) := by
   have hqs : q < arr.size := by omega
   have hd! : Ascii.isDigit arr[q]! = true := by
     rcases hstruct with ⟨_, h0⟩ | ⟨h19, _⟩
@@ -413,16 +597,26 @@ theorem value_run_num_int (arr : ByteArray) (q : Nat) (m : Int) (_hm : 0 ≤ m) 
 
 /-- `value` parses a nonnegative fractional number (`e > 0`): integer part of length `ip`, `.`,
 then a nonempty fractional part, total length `n`. -/
-theorem value_run_num_frac (arr : ByteArray) (q : Nat) (m : Int) (e ip n : Nat) (_hm : 0 ≤ m)
-    (hip : 1 ≤ ip) (hn : ip + 2 ≤ n) (hsize : q + n ≤ arr.size)
-    (hintstruct : (ip = 1 ∧ arr[q]! = 48) ∨
-      (Ascii.isDigit19 arr[q]! = true ∧ ∀ i, 1 ≤ i → i < ip → Ascii.isDigit arr[q + i]! = true))
+theorem value_run_num_frac
+    (arr : ByteArray)
+    (q : Nat)
+    (m : Int)
+    (e ip n : Nat)
+    (_hm : 0 ≤ m)
+    (hip : 1 ≤ ip)
+    (hn : ip + 2 ≤ n)
+    (hsize : q + n ≤ arr.size)
+    (hintstruct :
+      (ip = 1 ∧ arr[q]! = 48) ∨
+        (Ascii.isDigit19 arr[q]! = true ∧ ∀ i, 1 ≤ i → i < ip → Ascii.isDigit arr[q + i]! = true))
     (hdot : arr[q + ip]! = 46)
     (hfrac : ∀ i, ip + 1 ≤ i → i < n → Ascii.isDigit arr[q + i]! = true)
-    (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ Ascii.isDigit arr[q + n]! = false ∧
-      arr[q + n]! ≠ 46 ∧ Ascii.isExp arr[q + n]! = false))
-    (hdecode : decodeNumberBytes? arr q (q + n) = some (Json.num m e)) :
-    value.run arr q = .ok (Json.num m e) (q + n) := by
+    (hstop :
+      q + n = arr.size ∨
+        (q + n < arr.size ∧ Ascii.isDigit arr[q + n]! = false ∧
+          arr[q + n]! ≠ 46 ∧ Ascii.isExp arr[q + n]! = false))
+    (hdecode : decodeNumberBytes? arr q (q + n) = some (Json.num m e))
+    : value.run arr q = .ok (Json.num m e) (q + n) := by
   have hqs : q < arr.size := by omega
   have hd! : Ascii.isDigit arr[q]! = true := by
     rcases hintstruct with ⟨_, h0⟩ | ⟨h19, _⟩
@@ -467,16 +661,25 @@ theorem value_run_num_frac (arr : ByteArray) (q : Nat) (m : Int) (e ip n : Nat) 
 
 /-- `value` parses a negative integer (`m < 0`, `e = 0`): a `-` sign then an integer part of
 length `ip`. Dispatch routes `-` to `number` via the `dash` branch. -/
-theorem value_run_num_int_neg (arr : ByteArray) (q : Nat) (m : Int) (_hm : m < 0) (ip : Nat)
-    (hip : 1 ≤ ip) (hsize : q + 1 + ip ≤ arr.size) (hdash : arr[q]! = 45)
-    (hstruct : (ip = 1 ∧ arr[q + 1]! = 48) ∨
-      (Ascii.isDigit19 arr[q + 1]! = true ∧
-        ∀ i, 1 ≤ i → i < ip → Ascii.isDigit arr[q + 1 + i]! = true))
-    (hstop : q + 1 + ip = arr.size ∨ (q + 1 + ip < arr.size ∧
-      Ascii.isDigit arr[q + 1 + ip]! = false ∧ arr[q + 1 + ip]! ≠ 46 ∧
-      Ascii.isExp arr[q + 1 + ip]! = false))
-    (hdecode : decodeNumberBytes? arr q (q + 1 + ip) = some (Json.num m 0)) :
-    value.run arr q = .ok (Json.num m 0) (q + 1 + ip) := by
+theorem value_run_num_int_neg
+    (arr : ByteArray)
+    (q : Nat)
+    (m : Int)
+    (_hm : m < 0)
+    (ip : Nat)
+    (hip : 1 ≤ ip)
+    (hsize : q + 1 + ip ≤ arr.size)
+    (hdash : arr[q]! = 45)
+    (hstruct :
+      (ip = 1 ∧ arr[q + 1]! = 48) ∨
+        (Ascii.isDigit19 arr[q + 1]! = true ∧
+          ∀ i, 1 ≤ i → i < ip → Ascii.isDigit arr[q + 1 + i]! = true))
+    (hstop :
+      q + 1 + ip = arr.size ∨
+        (q + 1 + ip < arr.size ∧ Ascii.isDigit arr[q + 1 + ip]! = false ∧
+          arr[q + 1 + ip]! ≠ 46 ∧ Ascii.isExp arr[q + 1 + ip]! = false))
+    (hdecode : decodeNumberBytes? arr q (q + 1 + ip) = some (Json.num m 0))
+    : value.run arr q = .ok (Json.num m 0) (q + 1 + ip) := by
   have hqs : q < arr.size := by omega
   have hq1 : q + 1 < arr.size := by omega
   have hb : arr[q] = 45 := by rw [getElem!_pos arr q hqs] at hdash; exact hdash
@@ -514,17 +717,28 @@ theorem value_run_num_int_neg (arr : ByteArray) (q : Nat) (m : Int) (_hm : m < 0
 
 /-- `value` parses a negative fractional number (`m < 0`, `e > 0`): `-`, integer part of length
 `ip`, `.`, then a nonempty fractional part, total length `n`. -/
-theorem value_run_num_frac_neg (arr : ByteArray) (q : Nat) (m : Int) (e ip n : Nat) (_hm : m < 0)
-    (hip : 1 ≤ ip) (hn : ip + 3 ≤ n) (hsize : q + n ≤ arr.size) (hdash : arr[q]! = 45)
-    (hintstruct : (ip = 1 ∧ arr[q + 1]! = 48) ∨
-      (Ascii.isDigit19 arr[q + 1]! = true ∧
-        ∀ i, 1 ≤ i → i < ip → Ascii.isDigit arr[q + 1 + i]! = true))
+theorem value_run_num_frac_neg
+    (arr : ByteArray)
+    (q : Nat)
+    (m : Int)
+    (e ip n : Nat)
+    (_hm : m < 0)
+    (hip : 1 ≤ ip)
+    (hn : ip + 3 ≤ n)
+    (hsize : q + n ≤ arr.size)
+    (hdash : arr[q]! = 45)
+    (hintstruct :
+      (ip = 1 ∧ arr[q + 1]! = 48) ∨
+        (Ascii.isDigit19 arr[q + 1]! = true ∧
+          ∀ i, 1 ≤ i → i < ip → Ascii.isDigit arr[q + 1 + i]! = true))
     (hdot : arr[q + 1 + ip]! = 46)
     (hfrac : ∀ i, ip + 2 ≤ i → i < n → Ascii.isDigit arr[q + i]! = true)
-    (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ Ascii.isDigit arr[q + n]! = false ∧
-      arr[q + n]! ≠ 46 ∧ Ascii.isExp arr[q + n]! = false))
-    (hdecode : decodeNumberBytes? arr q (q + n) = some (Json.num m e)) :
-    value.run arr q = .ok (Json.num m e) (q + n) := by
+    (hstop :
+      q + n = arr.size ∨
+        (q + n < arr.size ∧ Ascii.isDigit arr[q + n]! = false ∧
+          arr[q + n]! ≠ 46 ∧ Ascii.isExp arr[q + n]! = false))
+    (hdecode : decodeNumberBytes? arr q (q + n) = some (Json.num m e))
+    : value.run arr q = .ok (Json.num m e) (q + n) := by
   have hqs : q < arr.size := by omega
   have hq1 : q + 1 < arr.size := by omega
   have hb : arr[q] = 45 := by rw [getElem!_pos arr q hqs] at hdash; exact hdash
@@ -562,9 +776,12 @@ theorem value_run_num_frac_neg (arr : ByteArray) (q : Nat) (m : Int) (e ip n : N
   exact value_run_number arr q m e n hqs (Or.inr hb) hnum
 
 /-- `value` parses the `null` keyword. -/
-theorem value_run_null (arr : ByteArray) (q : Nat) (hq : q + 4 ≤ arr.size)
-    (hm : ∀ j, j < 4 → arr[q + j]! = "null".toUTF8[j]!) :
-    value.run arr q = .ok Json.null (q + 4) := by
+theorem value_run_null
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : q + 4 ≤ arr.size)
+    (hm : ∀ j, j < 4 → arr[q + j]! = "null".toUTF8[j]!)
+    : value.run arr q = .ok Json.null (q + 4) := by
   have hs : q < arr.size := by omega
   have hb : arr[q] = 110 := by
     have h0 := hm 0 (by norm_num)
@@ -584,9 +801,12 @@ theorem value_run_null (arr : ByteArray) (q : Nat) (hq : q + 4 ≤ arr.size)
   exact clampAdvance_ok arr q (by omega) (by omega)
 
 /-- `value` parses the `true` keyword. -/
-theorem value_run_true (arr : ByteArray) (q : Nat) (hq : q + 4 ≤ arr.size)
-    (hm : ∀ j, j < 4 → arr[q + j]! = "true".toUTF8[j]!) :
-    value.run arr q = .ok (Json.bool true) (q + 4) := by
+theorem value_run_true
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : q + 4 ≤ arr.size)
+    (hm : ∀ j, j < 4 → arr[q + j]! = "true".toUTF8[j]!)
+    : value.run arr q = .ok (Json.bool true) (q + 4) := by
   have hs : q < arr.size := by omega
   have hb : arr[q] = 116 := by
     have h0 := hm 0 (by norm_num); rw [Nat.add_zero, getElem!_pos arr q hs] at h0; rw [h0]; decide
@@ -603,9 +823,12 @@ theorem value_run_true (arr : ByteArray) (q : Nat) (hq : q + 4 ≤ arr.size)
   exact clampAdvance_ok arr q (by omega) (by omega)
 
 /-- `value` parses the `false` keyword. -/
-theorem value_run_false (arr : ByteArray) (q : Nat) (hq : q + 5 ≤ arr.size)
-    (hm : ∀ j, j < 5 → arr[q + j]! = "false".toUTF8[j]!) :
-    value.run arr q = .ok (Json.bool false) (q + 5) := by
+theorem value_run_false
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : q + 5 ≤ arr.size)
+    (hm : ∀ j, j < 5 → arr[q + j]! = "false".toUTF8[j]!)
+    : value.run arr q = .ok (Json.bool false) (q + 5) := by
   have hs : q < arr.size := by omega
   have hb : arr[q] = 102 := by
     have h0 := hm 0 (by norm_num); rw [Nat.add_zero, getElem!_pos arr q hs] at h0; rw [h0]; decide
@@ -626,13 +849,15 @@ open GripProps.ScanStr
 
 /-- `jstr` on a rendered string: opening `"`, then `ebytes s.toList` body bytes, then closing
 `"`. Returns `s` at the position after the closing quote. -/
-theorem jstr_run (arr : ByteArray) (q : Nat) (s : String)
+theorem jstr_run
+    (arr : ByteArray)
+    (q : Nat)
+    (s : String)
     (hbound : q + 1 + (ebytes s.toList).length < arr.size)
     (h34 : arr[q]! = 34)
-    (hcontent : ∀ j, j < (ebytes s.toList).length →
-        arr[q + 1 + j]! = (ebytes s.toList)[j]!)
-    (hclose : arr[q + 1 + (ebytes s.toList).length]! = 34) :
-    jstr.run arr q = .ok s (q + 1 + (ebytes s.toList).length + 1) := by
+    (hcontent : ∀ j, j < (ebytes s.toList).length → arr[q + 1 + j]! = (ebytes s.toList)[j]!)
+    (hclose : arr[q + 1 + (ebytes s.toList).length]! = 34)
+    : jstr.run arr q = .ok s (q + 1 + (ebytes s.toList).length + 1) := by
   set k := (ebytes s.toList).length
   have hqs : q < arr.size := by omega
   have hq34 : arr[q] = 34 := by rwa [getElem!_pos arr q hqs] at h34
@@ -684,13 +909,15 @@ theorem jstr_run (arr : ByteArray) (q : Nat) (s : String)
 
 /-- `value` parses a string literal `s`. The array holds `"`, `ebytes s.toList`, `"` at `q`.
 Dispatch routes byte 34 (Ascii.quote) to `jstring`, which wraps `jstr` in `Json.str`. -/
-theorem value_run_str (arr : ByteArray) (q : Nat) (s : String)
+theorem value_run_str
+    (arr : ByteArray)
+    (q : Nat)
+    (s : String)
     (hbound : q + 1 + (ebytes s.toList).length < arr.size)
     (h34 : arr[q]! = 34)
-    (hcontent : ∀ j, j < (ebytes s.toList).length →
-        arr[q + 1 + j]! = (ebytes s.toList)[j]!)
-    (hclose : arr[q + 1 + (ebytes s.toList).length]! = 34) :
-    value.run arr q = .ok (Json.str s) (q + 1 + (ebytes s.toList).length + 1) := by
+    (hcontent : ∀ j, j < (ebytes s.toList).length → arr[q + 1 + j]! = (ebytes s.toList)[j]!)
+    (hclose : arr[q + 1 + (ebytes s.toList).length]! = 34)
+    : value.run arr q = .ok (Json.str s) (q + 1 + (ebytes s.toList).length + 1) := by
   have hqs : q < arr.size := by omega
   have hq34 : arr[q] = 34 := by rwa [getElem!_pos arr q hqs] at h34
   have hws : Ascii.isWs arr[q] = false := by rw [hq34]; decide
@@ -701,8 +928,11 @@ theorem value_run_str (arr : ByteArray) (q : Nat) (s : String)
     (jstr_run arr q s hbound h34 hcontent hclose)]
   exact clampAdvance_ok arr q (by omega) (by omega)
 
-private theorem renderNumScientific_append (m : Int) (e : Nat) :
-    renderNumScientific m e =
+private
+theorem renderNumScientific_append
+    (m : Int)
+    (e : Nat)
+    : renderNumScientific m e =
       (if m < 0 then "-" else "") ++ toString m.natAbs ++ "e-" ++ toString e := by
   by_cases hm : m < 0
   · apply String.ext
@@ -715,13 +945,20 @@ private theorem renderNumScientific_append (m : Int) (e : Nat) :
 
 /-- The `expo` parser consumes a `e-<digits>` exponent: marker, mandatory `-` sign, then `ep`
 digits, ending at a non-digit or end of input. -/
-private theorem expo_run_scientific (arr : ByteArray) (q ep : Nat)
-    (hq : q < arr.size) (hexp : Ascii.isExp arr[q]! = true)
-    (hsign : arr[q + 1]! = 45) (hq1 : q + 1 < arr.size) (hep : 1 ≤ ep)
+private
+theorem expo_run_scientific
+    (arr : ByteArray)
+    (q ep : Nat)
+    (hq : q < arr.size)
+    (hexp : Ascii.isExp arr[q]! = true)
+    (hsign : arr[q + 1]! = 45)
+    (hq1 : q + 1 < arr.size)
+    (hep : 1 ≤ ep)
     (hdigits : ∀ i, i < ep → Ascii.isDigit arr[q + 2 + i]! = true)
-    (hstop : q + 2 + ep = arr.size ∨
-      (q + 2 + ep < arr.size ∧ Ascii.isDigit arr[q + 2 + ep]! = false)) :
-    expo.run arr q = .ok ep (q + 2 + ep) := by
+    (hstop :
+      q + 2 + ep = arr.size ∨
+        (q + 2 + ep < arr.size ∧ Ascii.isDigit arr[q + 2 + ep]! = false))
+    : expo.run arr q = .ok ep (q + 2 + ep) := by
   have he : (GParser.satisfy Ascii.isExp).run arr q = .ok arr[q]! (q + 1) :=
     satisfy_run! _ arr q hq hexp
   have hs : (GParser.optional (GParser.satisfy Ascii.isSign)).run arr (q + 1) =
@@ -743,12 +980,14 @@ private theorem expo_run_scientific (arr : ByteArray) (q ep : Nat)
 /-- Byte view of a `pre ++ "e-" ++ post` string's UTF-8 encoding: the prefix bytes, then `e`
 (101), `-` (45), then the suffix bytes. One home for the append-index arithmetic the
 scientific-notation round-trips need. -/
-private theorem eMinus_append_bytes (pre post : String) :
-    (∀ i, i < pre.toUTF8.size → (pre ++ "e-" ++ post).toUTF8[i]! = pre.toUTF8[i]!) ∧
-    (pre ++ "e-" ++ post).toUTF8[pre.toUTF8.size]! = 101 ∧
-    (pre ++ "e-" ++ post).toUTF8[pre.toUTF8.size + 1]! = 45 ∧
-    (∀ i, i < post.toUTF8.size →
-      (pre ++ "e-" ++ post).toUTF8[pre.toUTF8.size + 2 + i]! = post.toUTF8[i]!) := by
+private
+theorem eMinus_append_bytes
+    (pre post : String)
+    : (∀ i, i < pre.toUTF8.size → (pre ++ "e-" ++ post).toUTF8[i]! = pre.toUTF8[i]!) ∧
+      (pre ++ "e-" ++ post).toUTF8[pre.toUTF8.size]! = 101 ∧
+      (pre ++ "e-" ++ post).toUTF8[pre.toUTF8.size + 1]! = 45 ∧
+      (∀ i, i < post.toUTF8.size →
+        (pre ++ "e-" ++ post).toUTF8[pre.toUTF8.size + 2 + i]! = post.toUTF8[i]!) := by
   have hE : ("e-" : String).toUTF8.size = 2 := by decide
   refine ⟨?_, ?_, ?_, ?_⟩
   · intro i hi
@@ -773,9 +1012,11 @@ private theorem eMinus_append_bytes (pre post : String) :
         rw [ByteArray.size_append, hE]; omega]
 
 /-- Byte view of a `"-" ++ s` string's UTF-8 encoding: `-` (45), then `s`'s bytes. -/
-private theorem neg_prepend_bytes (s : String) :
-    ("-" ++ s).toUTF8[0]! = 45 ∧
-    (∀ i, i < s.toUTF8.size → ("-" ++ s).toUTF8[1 + i]! = s.toUTF8[i]!) := by
+private
+theorem neg_prepend_bytes
+    (s : String)
+    : ("-" ++ s).toUTF8[0]! = 45 ∧
+      (∀ i, i < s.toUTF8.size → ("-" ++ s).toUTF8[1 + i]! = s.toUTF8[i]!) := by
   refine ⟨?_, ?_⟩
   · rw [toUTF8_append, ba_get!_append_left (by decide)]
     decide
@@ -788,11 +1029,13 @@ private theorem neg_prepend_bytes (s : String) :
 
 /-- Byte view of an `ip ++ "." ++ fp` string's UTF-8 encoding: the integer-part bytes, the `.`
 (46) at `|ip|`, then the fractional-part bytes. -/
-private theorem dot_append_bytes (ip fp : String) :
-    (∀ i, i < ip.toUTF8.size → (ip ++ "." ++ fp).toUTF8[i]! = ip.toUTF8[i]!) ∧
-    (ip ++ "." ++ fp).toUTF8[ip.toUTF8.size]! = 46 ∧
-    (∀ i, i < fp.toUTF8.size →
-      (ip ++ "." ++ fp).toUTF8[ip.toUTF8.size + 1 + i]! = fp.toUTF8[i]!) := by
+private
+theorem dot_append_bytes
+    (ip fp : String)
+    : (∀ i, i < ip.toUTF8.size → (ip ++ "." ++ fp).toUTF8[i]! = ip.toUTF8[i]!) ∧
+      (ip ++ "." ++ fp).toUTF8[ip.toUTF8.size]! = 46 ∧
+      (∀ i, i < fp.toUTF8.size →
+        (ip ++ "." ++ fp).toUTF8[ip.toUTF8.size + 1 + i]! = fp.toUTF8[i]!) := by
   have hD : ("." : String).toUTF8.size = 1 := by decide
   refine ⟨?_, ?_, ?_⟩
   · intro i hi
@@ -812,9 +1055,13 @@ private theorem dot_append_bytes (ip fp : String) :
         rw [ByteArray.size_append, hD]; omega]
 
 /-- An element of a decimal-digit character list, viewed as a byte, is `Ascii.isDigit`. -/
-private theorem isDigit_byte_of_mem {ds : List Char} {c : Char}
-    (hds_dig : ∀ c ∈ ds, 48 ≤ c.toNat ∧ c.toNat ≤ 57) (hmem : c ∈ ds) :
-    Ascii.isDigit (UInt8.ofNat c.toNat) = true := by
+private
+theorem isDigit_byte_of_mem
+    {ds : List Char}
+    {c : Char}
+    (hds_dig : ∀ c ∈ ds, 48 ≤ c.toNat ∧ c.toNat ≤ 57)
+    (hmem : c ∈ ds)
+    : Ascii.isDigit (UInt8.ofNat c.toNat) = true := by
   have hbounds := hds_dig c hmem
   have hlt256 : c.toNat < 256 := Nat.lt_of_le_of_lt hbounds.2 (by decide)
   exact isDigit_of_toNat_bounds _
@@ -1152,15 +1399,20 @@ theorem value_run_num_scientific (m : Int) (e : Nat) (buf : ByteArray) (q : Nat)
 /-- `value` parses any occurrence of the expanded decimal rendering `renderNum m e` at offset
 `q`: dispatch and the number grammar consume exactly the rendering. The `hstop` byte after it
 must be a delimiter (not a digit, `.`, or `e`) so the optional fraction/exponent parsers fail. -/
-theorem value_run_num_at (m : Int) (e : Nat) (buf : ByteArray) (q : Nat)
+theorem value_run_num_at
+    (m : Int)
+    (e : Nat)
+    (buf : ByteArray)
+    (q : Nat)
     (hq : q + (renderNum m e).toUTF8.size ≤ buf.size)
     (hmatch : ∀ i, i < (renderNum m e).toUTF8.size → buf[q + i]! = (renderNum m e).toUTF8[i]!)
-    (hstop : q + (renderNum m e).toUTF8.size = buf.size ∨
-             q + (renderNum m e).toUTF8.size < buf.size ∧
-               Ascii.isDigit buf[q + (renderNum m e).toUTF8.size]! = false ∧
-               buf[q + (renderNum m e).toUTF8.size]! ≠ 46 ∧
-               Ascii.isExp buf[q + (renderNum m e).toUTF8.size]! = false) :
-    Grip.Json.value.run buf q = .ok (Json.num m e) (q + (renderNum m e).toUTF8.size) := by
+    (hstop :
+      q + (renderNum m e).toUTF8.size = buf.size ∨
+        q + (renderNum m e).toUTF8.size < buf.size ∧
+          Ascii.isDigit buf[q + (renderNum m e).toUTF8.size]! = false ∧
+          buf[q + (renderNum m e).toUTF8.size]! ≠ 46 ∧
+          Ascii.isExp buf[q + (renderNum m e).toUTF8.size]! = false)
+    : Grip.Json.value.run buf q = .ok (Json.num m e) (q + (renderNum m e).toUTF8.size) := by
   by_cases he : e = 0
   · subst he
     by_cases hm : 0 ≤ m

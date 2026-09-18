@@ -77,7 +77,9 @@ replacing the old per-byte `foldMany` over a string-char combinator. -/
 
 -- Recursive value via `fix` ---------------------------------------------
 
-private def value : GParser conditional Nat :=
+private
+def value
+    : GParser conditional Nat :=
   GParser.fix fun value =>
     let commaValue : GParser conditional Nat :=
       GParser.seqR ws (GParser.seqR (GParser.ch ',') (GParser.seqR ws value))
@@ -119,7 +121,8 @@ private def value : GParser conditional Nat :=
 /-- Parse one complete JSON document: a value, then optional trailing whitespace,
 then end of input. Full consumption is enforced here (neither `run?` nor `parse`
 checks it), which is what rejects trailing garbage. -/
-def json : Parser Nat :=
+def json
+    : Parser Nat :=
   GParser.weakenFallible (GParser.seqL value (GParser.seqR ws GParser.eof))
 
 -- Acceptance guards -------------------------------------------------------

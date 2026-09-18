@@ -67,17 +67,25 @@ namespace Json
 /-- The integer value, if this number has no fractional part. Strict: only `exponent = 0`
 matches, so `20e-1` (parsed `num 20 1`, the value `2.0`) is not an integer, mirroring
 `Lean.JsonNumber`. -/
-def int? : Json → Option Int
+def int?
+    : Json →
+      Option Int
   | .num m 0 => some m
   | _        => none
 
 /-- Look up a key in an object (first match); `none` for a non-object or missing key. -/
-def get? : Json → String → Option Json
+def get?
+    : Json →
+      String →
+      Option Json
   | .obj kvs, k => (kvs.find? (·.1 == k)).map (·.2)
   | _,       _  => none
 
 /-- Index into an array; `none` for a non-array or an out-of-range index. -/
-def at? : Json → Nat → Option Json
+def at?
+    : Json →
+      Nat →
+      Option Json
   | .arr xs, i => xs[i]?
   | _,       _ => none
 
@@ -96,7 +104,10 @@ structure UState where
 /-- One step of `unescape`. Handles simple escapes, `\uXXXX`, and a high/low surrogate
 pair combined into one scalar. Assumes a grammar-validated body, so malformed input is
 handled leniently rather than rejected. -/
-def uStep (st : UState) (c : Char) : UState :=
+def uStep
+    (st : UState)
+    (c : Char)
+    : UState :=
   if st.uLeft > 0 then
     let acc := st.uAcc * 16 + Grip.Ascii.hexValue (UInt8.ofNat c.toNat)
     if st.uLeft == 1 then
@@ -202,7 +213,11 @@ open Decode
   else none
 
 /-- A valid escape strictly advances the scan (simple escape by 2, `\uXXXX` by 6). -/
-theorem escEnd_gt (arr : ByteArray) (q q' : Nat) (h : escEnd arr q = some q') : q < q' := by
+theorem escEnd_gt
+    (arr : ByteArray)
+    (q q' : Nat)
+    (h : escEnd arr q = some q')
+    : q < q' := by
   rw [escEnd] at h
   split at h
   · split at h
@@ -242,7 +257,11 @@ decreasing_by
   · omega
 
 /-- A valid escape ends within the input: both accepted shapes are guarded by a bound check. -/
-theorem escEnd_le (arr : ByteArray) (q q' : Nat) (h : escEnd arr q = some q') : q' ≤ arr.size := by
+theorem escEnd_le
+    (arr : ByteArray)
+    (q q' : Nat)
+    (h : escEnd arr q = some q')
+    : q' ≤ arr.size := by
   rw [escEnd] at h
   split at h
   · rename_i h1
@@ -261,9 +280,16 @@ theorem escEnd_le (arr : ByteArray) (q q' : Nat) (h : escEnd arr q = some q') : 
 /-- `scanStr` reports a failure between the opening quote and the end of the input. The lower
 bound is `q0` rather than `q` because a body that fails UTF-8 validation is reported back at
 the opening quote. -/
-theorem scanStr_err (arr : ByteArray) (q0 q : Nat) (esc : Bool) (e : Err)
-    (h0 : q0 ≤ q) (hq : q ≤ arr.size) (h : scanStr arr q0 q esc = .error e) :
-    q0 ≤ e.pos ∧ e.pos ≤ arr.size := by
+theorem scanStr_err
+    (arr : ByteArray)
+    (q0 q : Nat)
+    (esc : Bool)
+    (e : Err)
+    (h0 : q0 ≤ q)
+    (hq : q ≤ arr.size)
+    (h : scanStr arr q0 q esc = .error e)
+    : q0 ≤ e.pos ∧
+      e.pos ≤ arr.size := by
   rw [scanStr] at h
   split at h
   · rename_i hlt
@@ -300,8 +326,13 @@ decreasing_by
       | exact Nat.sub_lt_sub_left ‹q < arr.size› (escEnd_gt arr q _ ‹escEnd arr q = some _›)
 
 /-- `scanStr` strictly advances past its current position on success. -/
-theorem scanStr_gt (arr : ByteArray) (q0 q q' : Nat) (esc : Bool) (a : String)
-    (h : scanStr arr q0 q esc = .ok a q') : q < q' := by
+theorem scanStr_gt
+    (arr : ByteArray)
+    (q0 q q' : Nat)
+    (esc : Bool)
+    (a : String)
+    (h : scanStr arr q0 q esc = .ok a q')
+    : q < q' := by
   rw [scanStr] at h
   split at h
   · rename_i hq
@@ -328,8 +359,13 @@ decreasing_by
       | exact Nat.sub_lt_sub_left ‹q < arr.size› (escEnd_gt arr q _ ‹escEnd arr q = some _›)
 
 /-- `scanStr` stays within bounds on success. -/
-theorem scanStr_le (arr : ByteArray) (q0 q q' : Nat) (esc : Bool) (a : String)
-    (h : scanStr arr q0 q esc = .ok a q') : q' ≤ arr.size := by
+theorem scanStr_le
+    (arr : ByteArray)
+    (q0 q q' : Nat)
+    (esc : Bool)
+    (a : String)
+    (h : scanStr arr q0 q esc = .ok a q')
+    : q' ≤ arr.size := by
   rw [scanStr] at h
   split at h
   · rename_i hq
@@ -566,10 +602,20 @@ decreasing_by
 
 /-- `bodyFwd` strictly advances past its starting offset on success: it always consumes at
 least the closing byte. -/
-theorem bodyFwd_gt {α β : Type} (push : β → α → β) (elem : GParser conditional α)
-    (close : UInt8) (closeName : String) (arr : ByteArray) (acc : β) (first : Bool)
-    (q : Nat) (b : β) (q' : Nat)
-    (h : bodyFwd push elem close closeName arr acc first q = .ok b q') : q < q' := by
+theorem bodyFwd_gt
+    {α β : Type}
+    (push : β → α → β)
+    (elem : GParser conditional α)
+    (close : UInt8)
+    (closeName : String)
+    (arr : ByteArray)
+    (acc : β)
+    (first : Bool)
+    (q : Nat)
+    (b : β)
+    (q' : Nat)
+    (h : bodyFwd push elem close closeName arr acc first q = .ok b q')
+    : q < q' := by
   rw [bodyFwd] at h
   simp only [] at h
   have hge := scanFwd_ge arr Ascii.isWs q
@@ -611,11 +657,21 @@ decreasing_by
 The two `.error ⟨q'', []⟩` branches are unreachable rather than proved: `elem` is graded
 `conditional`, so its own `cwit` and `bwit` say the guard `q < q'' ∧ q'' ≤ arr.size` holds
 whenever `elem` succeeded from an in-bounds offset. -/
-theorem bodyFwd_err {α β : Type} (push : β → α → β) (elem : GParser conditional α)
-    (close : UInt8) (closeName : String) (arr : ByteArray) (acc : β) (first : Bool)
-    (q : Nat) (e : Err) (hq : q ≤ arr.size)
-    (h : bodyFwd push elem close closeName arr acc first q = .error e) :
-    q ≤ e.pos ∧ e.pos ≤ arr.size := by
+theorem bodyFwd_err
+    {α β : Type}
+    (push : β → α → β)
+    (elem : GParser conditional α)
+    (close : UInt8)
+    (closeName : String)
+    (arr : ByteArray)
+    (acc : β)
+    (first : Bool)
+    (q : Nat)
+    (e : Err)
+    (hq : q ≤ arr.size)
+    (h : bodyFwd push elem close closeName arr acc first q = .error e)
+    : q ≤ e.pos ∧
+      e.pos ≤ arr.size := by
   rw [bodyFwd] at h
   simp only [] at h
   have hge := scanFwd_ge arr Ascii.isWs q
@@ -675,10 +731,20 @@ decreasing_by
     omega
 
 /-- `bodyFwd` stays within bounds on success. -/
-theorem bodyFwd_le {α β : Type} (push : β → α → β) (elem : GParser conditional α)
-    (close : UInt8) (closeName : String) (arr : ByteArray) (acc : β) (first : Bool)
-    (q : Nat) (b : β) (q' : Nat)
-    (h : bodyFwd push elem close closeName arr acc first q = .ok b q') : q' ≤ arr.size := by
+theorem bodyFwd_le
+    {α β : Type}
+    (push : β → α → β)
+    (elem : GParser conditional α)
+    (close : UInt8)
+    (closeName : String)
+    (arr : ByteArray)
+    (acc : β)
+    (first : Bool)
+    (q : Nat)
+    (b : β)
+    (q' : Nat)
+    (h : bodyFwd push elem close closeName arr acc first q = .ok b q')
+    : q' ≤ arr.size := by
   rw [bodyFwd] at h
   simp only [] at h
   have hge := scanFwd_ge arr Ascii.isWs q
@@ -732,7 +798,9 @@ element reach the caller instead of being turned into "expected `]`" at the sepa
 
 /-- Named body of the recursive JSON value parser. Proofs reference
     `GParser.fixFuel valueBody` directly. -/
-def valueBody (rec : GParser conditional Json) : GParser conditional Json :=
+def valueBody
+    (rec : GParser conditional Json)
+    : GParser conditional Json :=
   -- The container sub-parsers reference `rec`, so `fix` rebuilds them on every entry.
   -- Building them inside the taken dispatch arm (not eagerly before the dispatch) means a
   -- leaf value (string/number/keyword) constructs no array/object machinery at all.
@@ -785,7 +853,9 @@ def hexDigit (n : Nat) : Char := "0123456789abcdef".toList.getD n '0'
 /-- The JSON escape of a single character, as the list of output characters: `"`, `\`, and the
 named control escapes map to a two-character sequence, other control bytes to `\u00XX`, and every
 other character to itself. -/
-def escapeChar (c : Char) : List Char :=
+def escapeChar
+    (c : Char)
+    : List Char :=
   if c == '"' then ['\\', '"']
   else if c == '\\' then ['\\', '\\']
   else if c == '\n' then ['\\', 'n']
@@ -804,7 +874,10 @@ def escape (s : String) : String := String.ofList (s.toList.flatMap escapeChar)
 
 /-- Render an exact `num mantissa exponent` to a decimal literal, inserting the point
 `exponent` digits from the right (`num 25 1` → `"2.5"`, `num 5 3` → `"0.005"`). -/
-def renderNum (m : Int) (e : Nat) : String :=
+def renderNum
+    (m : Int)
+    (e : Nat)
+    : String :=
   if e == 0 then (if m < 0 then "-" else "") ++ toString m.natAbs
   else
     let ds := List.replicate (e + 1 - (toString m.natAbs).length) '0' ++ (toString m.natAbs).toList
@@ -813,18 +886,27 @@ def renderNum (m : Int) (e : Nat) : String :=
 
 /-- Render a fractional number using JSON exponent notation. This avoids materializing `e`
 zeroes for large scales while preserving the exact `num m e` representation on parse. -/
-def renderNumScientific (m : Int) (e : Nat) : String :=
+def renderNumScientific
+    (m : Int)
+    (e : Nat)
+    : String :=
   (if m < 0 then "-" else "") ++ toString m.natAbs ++ "e-" ++ toString e
 
 /-- Serialize a numeric DOM value. Ordinary values retain their canonical expanded decimal form;
 large fractional exponents use compact scientific notation so rendering remains proportional to
 the exponent's digit count rather than its value. -/
-def renderNumber (m : Int) (e : Nat) : String :=
+def renderNumber
+    (m : Int)
+    (e : Nat)
+    : String :=
   if e > maxExp then renderNumScientific m e else renderNum m e
 
 /-- Join a list of strings with a separator, proof-friendly alternative to `String.intercalate`.
 The output is identical: `joinWith sep ss = String.intercalate sep ss`. -/
-def joinWith (sep : String) : List String → String
+def joinWith
+    (sep : String)
+    : List String →
+      String
   | []         => ""
   | [s]        => s
   | s :: rest  => s ++ sep ++ joinWith sep rest
@@ -832,7 +914,9 @@ def joinWith (sep : String) : List String → String
 /-- Serialize a value to compact RFC-8259 JSON (no insignificant whitespace). Parsing the result
 recovers the exact `Json` value, including the numeric mantissa/exponent representation. Total:
 structural on `sizeOf`; `attach` carries the membership proof each recursive call decreases by. -/
-def render : Json → String
+def render
+    : Json →
+      String
   | .null       => "null"
   | .bool true  => "true"
   | .bool false => "false"

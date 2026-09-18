@@ -45,14 +45,18 @@ open Grip Grip.Examples.Json
 
 /-- Accept iff the benchmark validator `json` (grammar-strict, leaf-counting, no DOM) parses
 the whole input. -/
-def acceptsValidator (arr : ByteArray) : Bool :=
+def acceptsValidator
+    (arr : ByteArray)
+    : Bool :=
   match json.run arr 0 with
   | .ok _ _  => true
   | .error _ => false
 
 /-- Accept iff `Grip.Json.parse` -- the value-producing parser `parse_render` is proved about,
 and the one a caller of grip's public API actually invokes -- parses the whole input. -/
-def acceptsDom (arr : ByteArray) : Bool :=
+def acceptsDom
+    (arr : ByteArray)
+    : Bool :=
   match Grip.Json.parse arr with
   | .ok _    => true
   | .error _ => false
@@ -61,8 +65,11 @@ def acceptsDom (arr : ByteArray) : Bool :=
 those files are rejected by both parsers. -/
 def nAllowAccept : List String := []
 
-private def classify (name : String) (accepted : Bool) :
-    (Nat × Nat × Nat × Nat × Nat × Nat × Bool) :=
+private
+def classify
+    (name : String)
+    (accepted : Bool)
+    : (Nat × Nat × Nat × Nat × Nat × Nat × Bool) :=
   -- returns (yTot,yOk, nTot,nOk, iAcc,iRej, regression)
   if name.startsWith "y_" then
     (1, (if accepted then 1 else 0), 0, 0, 0, 0, !accepted)
@@ -83,14 +90,22 @@ structure Stats where
   iRej : Nat := 0
   regressions : List String := []
 
-private def Stats.step (s : Stats) (name : String) (accepted : Bool) : Stats :=
+private
+def Stats.step
+    (s : Stats)
+    (name : String)
+    (accepted : Bool)
+    : Stats :=
   let (yt, yo, nt, no, ia, ir, regr) := classify name accepted
   { yTot := s.yTot + yt, yOk := s.yOk + yo
     nTot := s.nTot + nt, nOk := s.nOk + no
     iAcc := s.iAcc + ia, iRej := s.iRej + ir
     regressions := if regr then name :: s.regressions else s.regressions }
 
-private def Stats.summary (s : Stats) : String :=
+private
+def Stats.summary
+    (s : Stats)
+    : String :=
   s!"y: {s.yOk}/{s.yTot} accepted · n: {s.nOk}/{s.nTot} rejected \
     (allow-accept {nAllowAccept.length}) · i: {s.iAcc} accepted / {s.iRej} rejected"
 
