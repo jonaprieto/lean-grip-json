@@ -34,13 +34,15 @@ def ebytes (cs : List Char) : List UInt8 := (cs.flatMap escapeChar).flatMap Stri
 theorem ebytes_cons
     (c : Char)
     (cs : List Char)
-    : ebytes (c :: cs) = cbytes c ++ ebytes cs := by
+    : ebytes (c :: cs) = cbytes c ++ ebytes cs
+    := by
   simp only [ebytes, cbytes, List.flatMap_cons, List.flatMap_append]
 
 /-- Every `hexDigit` output is one of the sixteen hex characters. -/
 theorem hexDigit_mem
     (n : Nat)
-    : hexDigit n ∈ "0123456789abcdef".toList := by
+    : hexDigit n ∈ "0123456789abcdef".toList
+    := by
   unfold hexDigit
   rcases Nat.lt_or_ge n "0123456789abcdef".toList.length with h | h
   · rw [List.getD_eq_getElem _ _ h]; exact List.getElem_mem _
@@ -49,7 +51,8 @@ theorem hexDigit_mem
 /-- `Ascii.isHexDigit` accepts every `hexDigit` output: each is one of `0-9a-f`, all hex. -/
 theorem isHexDigit_hexDigit
     (n : Nat)
-    : Ascii.isHexDigit ((hexDigit n).val.toUInt8) = true := by
+    : Ascii.isHexDigit ((hexDigit n).val.toUInt8) = true
+    := by
   have key : ∀ c ∈ "0123456789abcdef".toList, Ascii.isHexDigit (c.val.toUInt8) = true := by
     intro c hc; fin_cases hc <;> rfl
   exact key _ (hexDigit_mem n)
@@ -61,7 +64,8 @@ theorem passthrough_props
     (h : escapeChar c = [c])
     : 32 ≤ c.toNat ∧
       c.val ≠ 34 ∧
-      c.val ≠ 92 := by
+      c.val ≠ 92
+    := by
   unfold escapeChar at h
   by_cases h34 : c = '"'
   · simp [h34] at h
@@ -88,7 +92,8 @@ theorem passthrough_props
 `escape s`. -/
 theorem fromUTF8!_toUTF8
     (s : String)
-    : String.fromUTF8! s.toUTF8 = s := by
+    : String.fromUTF8! s.toUTF8 = s
+    := by
   have hv : s.toUTF8.IsValidUTF8 := by
     rw [show s.toUTF8 = s.toList.utf8Encode from by
       rw [String.toUTF8_eq_toByteArray, ← String.utf8Encode_toList]]
@@ -105,7 +110,8 @@ range is known valid (always true when it is `(escape s).toUTF8` for a real `s`)
 theorem fromUTF8?_of_isValidUTF8
     {b : ByteArray}
     (hv : b.IsValidUTF8)
-    : String.fromUTF8? b = some (String.fromUTF8! b) := by
+    : String.fromUTF8? b = some (String.fromUTF8! b)
+    := by
   unfold String.fromUTF8? String.fromUTF8!
   rw [dif_pos hv, dif_pos hv]
 
@@ -115,7 +121,8 @@ theorem scanNormal_of_ge_128
     (h : 128 ≤ b.toNat)
     : b ≠ 34 ∧
       b ≠ 92 ∧
-      ¬ b < 32 := by
+      ¬ b < 32
+    := by
   refine ⟨?_, ?_, ?_⟩
   · intro hb
     have := congrArg UInt8.toNat hb
@@ -134,7 +141,8 @@ theorem scanNormal_of_high_prefix
     (hp : p.toBitVec.msb = true)
     : (b ||| p) ≠ 34 ∧
       (b ||| p) ≠ 92 ∧
-      ¬ (b ||| p) < 32 := by
+      ¬ (b ||| p) < 32
+    := by
   apply scanNormal_of_ge_128
   have hmsb : (b ||| p).toBitVec.msb = true := by
     simp [hp]
@@ -154,7 +162,8 @@ theorem passthrough_bytes_normal
     (hb : b ∈ String.utf8EncodeChar c)
     : b ≠ 34 ∧
       b ≠ 92 ∧
-      ¬ b < 32 := by
+      ¬ b < 32
+    := by
   have hpos := Char.utf8Size_pos c
   have hle4 := Char.utf8Size_le_four c
   rcases (show c.utf8Size = 1 ∨ c.utf8Size = 2 ∨ c.utf8Size = 3 ∨ c.utf8Size = 4 from by omega)
@@ -188,18 +197,11 @@ theorem passthrough_bytes_normal
 /-- At the closing quote, `scanStr` finishes: it builds the body `arr[q0+1 .. q)` and unescapes
 it exactly when an escape was seen -- given the body is valid UTF-8 (always true of a rendered
 body; `scanStr` rejects the string otherwise, see `Grip.Json.scanStr`). -/
-theorem scanStr_close
-    (arr : ByteArray)
-    (q0 q : Nat)
-    (esc : Bool)
-    (hq : q < arr.size)
-    (h34 : arr[q]! = 34)
-    (hv : (arr.extract (q0 + 1) q).IsValidUTF8)
-    : scanStr arr q0 q esc =
-      .ok
-        (if esc then unescape (String.fromUTF8! (arr.extract (q0 + 1) q))
-          else String.fromUTF8! (arr.extract (q0 + 1) q))
-        (q + 1) := by
+theorem scanStr_close (arr : ByteArray) (q0 q : Nat) (esc : Bool) (hq : q < arr.size)
+    (h34 : arr[q]! = 34) (hv : (arr.extract (q0 + 1) q).IsValidUTF8) :
+    scanStr arr q0 q esc =
+      .ok (if esc then unescape (String.fromUTF8! (arr.extract (q0 + 1) q))
+        else String.fromUTF8! (arr.extract (q0 + 1) q)) (q + 1) := by
   rw [getElem!_pos arr q hq] at h34
   rw [scanStr]
   simp only [dif_pos hq, h34, beq_self_eq_true, if_true, fromUTF8?_of_isValidUTF8 hv]
@@ -214,7 +216,8 @@ theorem scanStr_normal_step
     (h34 : arr[q]! ≠ 34)
     (h92 : arr[q]! ≠ 92)
     (hlt : ¬ arr[q]! < 32)
-    : scanStr arr q0 q esc = scanStr arr q0 (q + 1) esc := by
+    : scanStr arr q0 q esc = scanStr arr q0 (q + 1) esc
+    := by
   rw [getElem!_pos arr q hq] at h34 h92 hlt
   rw [scanStr]
   rw [dif_pos hq, if_neg (by simpa [beq_iff_eq] using h34),
@@ -228,7 +231,8 @@ theorem scanStr_normal_run
     (esc : Bool)
     : ∀ (k : Nat),
       (∀ i, i < k → q + i < arr.size ∧ arr[q + i]! ≠ 34 ∧ arr[q + i]! ≠ 92 ∧ ¬ arr[q + i]! < 32) →
-      scanStr arr q0 q esc = scanStr arr q0 (q + k) esc := by
+      scanStr arr q0 q esc = scanStr arr q0 (q + k) esc
+    := by
   intro k
   induction k generalizing q with
   | zero => intro _; rw [Nat.add_zero]
@@ -251,7 +255,8 @@ theorem scanStr_esc_step
     (hq : q < arr.size)
     (h92 : arr[q]! = 92)
     (hE : escEnd arr q = some q')
-    : scanStr arr q0 q esc = scanStr arr q0 q' true := by
+    : scanStr arr q0 q esc = scanStr arr q0 q' true
+    := by
   rw [getElem!_pos arr q hq] at h92
   have c34 : (arr[q] == 34) = false := by simp [h92]
   have c92 : (arr[q] == 92) = true := by simp [h92]
@@ -265,30 +270,20 @@ theorem scanStr_esc_step
 
 /-- `escEnd` accepts a simple two-byte escape: a backslash whose successor is one of the named
 escape bytes advances by two. -/
-theorem escEnd_simple
-    (arr : ByteArray)
-    (q : Nat)
-    (hq : q + 1 < arr.size)
-    (hset :
-      (arr[q + 1]! == 34 || arr[q + 1]! == 92 || arr[q + 1]! == 47 || arr[q + 1]! == 98 ||
-        arr[q + 1]! == 102 || arr[q + 1]! == 110 || arr[q + 1]! == 114 || arr[q + 1]! == 116) =
-        true)
-    : escEnd arr q = some (q + 2) := by
+theorem escEnd_simple (arr : ByteArray) (q : Nat) (hq : q + 1 < arr.size)
+    (hset : (arr[q + 1]! == 34 || arr[q + 1]! == 92 || arr[q + 1]! == 47 || arr[q + 1]! == 98 ||
+      arr[q + 1]! == 102 || arr[q + 1]! == 110 || arr[q + 1]! == 114 ||
+      arr[q + 1]! == 116) = true) :
+    escEnd arr q = some (q + 2) := by
   rw [getElem!_pos arr (q + 1) hq] at hset
   rw [escEnd, dif_pos hq, if_pos hset]
 
 /-- `escEnd` accepts a `\uXXXX` escape: `\`, `u`, then four hex bytes, advancing by six. -/
-theorem escEnd_u
-    (arr : ByteArray)
-    (q : Nat)
-    (hq1 : q + 1 < arr.size)
-    (hq5 : q + 5 < arr.size)
+theorem escEnd_u (arr : ByteArray) (q : Nat) (hq1 : q + 1 < arr.size) (hq5 : q + 5 < arr.size)
     (hu : arr[q + 1]! = 117)
-    (hhex :
-      (Ascii.isHexDigit arr[q + 2]! && Ascii.isHexDigit arr[q + 3]! &&
-        Ascii.isHexDigit arr[q + 4]! && Ascii.isHexDigit arr[q + 5]!) =
-        true)
-    : escEnd arr q = some (q + 6) := by
+    (hhex : (Ascii.isHexDigit arr[q + 2]! && Ascii.isHexDigit arr[q + 3]! &&
+      Ascii.isHexDigit arr[q + 4]! && Ascii.isHexDigit arr[q + 5]!) = true) :
+    escEnd arr q = some (q + 6) := by
   rw [getElem!_pos arr (q + 1) hq1] at hu
   rw [getElem!_pos arr (q + 2) (by omega), getElem!_pos arr (q + 3) (by omega),
     getElem!_pos arr (q + 4) (by omega), getElem!_pos arr (q + 5) hq5] at hhex
@@ -305,7 +300,8 @@ theorem scanStr_char_passthrough
     (hpass : escapeChar c = [c])
     (hcontent : ∀ j, j < c.utf8Size → arr[q + j]! = (String.utf8EncodeChar c)[j]!)
     (hbound : q + c.utf8Size ≤ arr.size)
-    : scanStr arr q0 q esc = scanStr arr q0 (q + c.utf8Size) esc := by
+    : scanStr arr q0 q esc = scanStr arr q0 (q + c.utf8Size) esc
+    := by
   obtain ⟨h32, hq34, hq92⟩ := passthrough_props c hpass
   apply scanStr_normal_run arr q0 q esc c.utf8Size
   intro i hi
@@ -319,7 +315,8 @@ theorem scanStr_char_passthrough
 /-- Every `hexDigit` output is ASCII (`≤ 0x7F`). -/
 theorem hexDigit_val_le
     (k : Nat)
-    : (hexDigit k).val ≤ 0x7F := by
+    : (hexDigit k).val ≤ 0x7F
+    := by
   have key : ∀ c ∈ "0123456789abcdef".toList, c.val ≤ 0x7F := by
     intro c hc; fin_cases hc <;> decide
   exact key _ (hexDigit_mem k)
@@ -327,56 +324,35 @@ theorem hexDigit_val_le
 /-- A `hexDigit` char is single-byte in UTF-8, carrying its codepoint. -/
 theorem hexDigit_utf8
     (k : Nat)
-    : String.utf8EncodeChar (hexDigit k) = [(hexDigit k).val.toUInt8] :=
+    : String.utf8EncodeChar (hexDigit k) = [(hexDigit k).val.toUInt8]
+    :=
   String.utf8EncodeChar_eq_singleton (Char.utf8Size_eq_one_iff.mpr (hexDigit_val_le k))
 
 /-- A two-byte escape (`\` then a named escape byte) is walked in two, marking `esc`. -/
-theorem scanStr_char_escape2
-    (arr : ByteArray)
-    (q0 q : Nat)
-    (esc : Bool)
-    (Xb : UInt8)
-    (hq1 : q + 1 < arr.size)
-    (h92 : arr[q]! = 92)
-    (hX : arr[q + 1]! = Xb)
-    (hset :
-      (Xb == 34 || Xb == 92 || Xb == 47 || Xb == 98 || Xb == 102 || Xb == 110 || Xb == 114 ||
-        Xb == 116) =
-        true)
-    : scanStr arr q0 q esc = scanStr arr q0 (q + 2) true :=
+theorem scanStr_char_escape2 (arr : ByteArray) (q0 q : Nat) (esc : Bool) (Xb : UInt8)
+    (hq1 : q + 1 < arr.size) (h92 : arr[q]! = 92) (hX : arr[q + 1]! = Xb)
+    (hset : (Xb == 34 || Xb == 92 || Xb == 47 || Xb == 98 || Xb == 102 || Xb == 110 ||
+      Xb == 114 || Xb == 116) = true) :
+    scanStr arr q0 q esc = scanStr arr q0 (q + 2) true :=
   scanStr_esc_step arr q0 q (q + 2) esc (by omega) h92
     (escEnd_simple arr q hq1 (by rw [hX]; exact hset))
 
 /-- A `\uXXXX` escape (a control character's rendering) is walked in six, marking `esc`. -/
-theorem scanStr_char_escapeU
-    (arr : ByteArray)
-    (q0 q : Nat)
-    (esc : Bool)
-    (hq5 : q + 5 < arr.size)
-    (h92 : arr[q]! = 92)
-    (hu : arr[q + 1]! = 117)
-    (hhex :
-      (Ascii.isHexDigit arr[q + 2]! && Ascii.isHexDigit arr[q + 3]! &&
-        Ascii.isHexDigit arr[q + 4]! && Ascii.isHexDigit arr[q + 5]!) =
-        true)
-    : scanStr arr q0 q esc = scanStr arr q0 (q + 6) true :=
+theorem scanStr_char_escapeU (arr : ByteArray) (q0 q : Nat) (esc : Bool) (hq5 : q + 5 < arr.size)
+    (h92 : arr[q]! = 92) (hu : arr[q + 1]! = 117)
+    (hhex : (Ascii.isHexDigit arr[q + 2]! && Ascii.isHexDigit arr[q + 3]! &&
+      Ascii.isHexDigit arr[q + 4]! && Ascii.isHexDigit arr[q + 5]!) = true) :
+    scanStr arr q0 q esc = scanStr arr q0 (q + 6) true :=
   scanStr_esc_step arr q0 q (q + 6) esc (by omega) h92 (escEnd_u arr q (by omega) hq5 hu hhex)
 
 /-- A named two-byte escape, given its byte layout `[92, Xb]`, is walked in two. -/
-theorem escape2_of
-    (arr : ByteArray)
-    (q0 q : Nat)
-    (esc : Bool)
-    (c : Char)
-    (Xb : UInt8)
+theorem escape2_of (arr : ByteArray) (q0 q : Nat) (esc : Bool) (c : Char) (Xb : UInt8)
     (hcb : cbytes c = [92, Xb])
-    (hset :
-      (Xb == 34 || Xb == 92 || Xb == 47 || Xb == 98 || Xb == 102 || Xb == 110 || Xb == 114 ||
-        Xb == 116) =
-        true)
+    (hset : (Xb == 34 || Xb == 92 || Xb == 47 || Xb == 98 || Xb == 102 || Xb == 110 ||
+      Xb == 114 || Xb == 116) = true)
     (hcontent : ∀ j, j < (cbytes c).length → arr[q + j]! = (cbytes c)[j]!)
-    (hbound : q + (cbytes c).length ≤ arr.size)
-    : scanStr arr q0 q esc = scanStr arr q0 (q + (cbytes c).length) true := by
+    (hbound : q + (cbytes c).length ≤ arr.size) :
+    scanStr arr q0 q esc = scanStr arr q0 (q + (cbytes c).length) true := by
   have hlen : (cbytes c).length = 2 := by rw [hcb]; rfl
   rw [hlen]
   have h92 : arr[q]! = 92 := by
@@ -398,7 +374,8 @@ theorem escapeU_of
     (hb5 : Ascii.isHexDigit b5 = true)
     (hcontent : ∀ j, j < (cbytes c).length → arr[q + j]! = (cbytes c)[j]!)
     (hbound : q + (cbytes c).length ≤ arr.size)
-    : scanStr arr q0 q esc = scanStr arr q0 (q + (cbytes c).length) true := by
+    : scanStr arr q0 q esc = scanStr arr q0 (q + (cbytes c).length) true
+    := by
   have hlen : (cbytes c).length = 6 := by rw [hcb]; rfl
   rw [hlen]
   have g92 : arr[q]! = 92 := by
@@ -429,7 +406,8 @@ theorem scanStr_char_escape
     (hesc : escapeChar c ≠ [c])
     (hcontent : ∀ j, j < (cbytes c).length → arr[q + j]! = (cbytes c)[j]!)
     (hbound : q + (cbytes c).length ≤ arr.size)
-    : scanStr arr q0 q esc = scanStr arr q0 (q + (cbytes c).length) true := by
+    : scanStr arr q0 q esc = scanStr arr q0 (q + (cbytes c).length) true
+    := by
   by_cases h : c = '"'
   · exact escape2_of arr q0 q esc c 34 (by rw [h]; decide) (by decide) hcontent hbound
   by_cases h2 : c = '\\'
@@ -472,7 +450,8 @@ theorem getElem!_append_left
     (l1 l2 : List UInt8)
     (j : Nat)
     (h : j < l1.length)
-    : (l1 ++ l2)[j]! = l1[j]! := by
+    : (l1 ++ l2)[j]! = l1[j]!
+    := by
   rw [getElem!_pos l1 j h, getElem!_pos (l1 ++ l2) j (by rw [List.length_append]; omega)]
   rw [List.getElem_append_left]
 
@@ -482,7 +461,8 @@ theorem getElem!_append_right
     (j : Nat)
     (h : l1.length ≤ j)
     (h2 : j < l1.length + l2.length)
-    : (l1 ++ l2)[j]! = l2[j - l1.length]! := by
+    : (l1 ++ l2)[j]! = l2[j - l1.length]!
+    := by
   rw [getElem!_pos (l1 ++ l2) j (by rw [List.length_append]; omega),
     getElem!_pos l2 (j - l1.length) (by omega)]
   rw [List.getElem_append_right h]
@@ -490,14 +470,10 @@ theorem getElem!_append_right
 /-- **One character of a rendered body.** `scanStr` walks a single character's `cbytes`, advancing
 by their length and setting the escape flag iff the character was escaped. Unifies the passthrough
 and escape steps. -/
-theorem scanStr_char_step
-    (arr : ByteArray)
-    (q0 q : Nat)
-    (esc : Bool)
-    (c : Char)
+theorem scanStr_char_step (arr : ByteArray) (q0 q : Nat) (esc : Bool) (c : Char)
     (hcontent : ∀ j, j < (cbytes c).length → arr[q + j]! = (cbytes c)[j]!)
-    (hbound : q + (cbytes c).length ≤ arr.size)
-    : scanStr arr q0 q esc =
+    (hbound : q + (cbytes c).length ≤ arr.size) :
+    scanStr arr q0 q esc =
       scanStr arr q0 (q + (cbytes c).length) (esc || !(escapeChar c == [c])) := by
   by_cases hp : escapeChar c = [c]
   · have hbeq : (escapeChar c == [c]) = true := by rw [hp]; exact beq_self_eq_true _
@@ -518,11 +494,8 @@ theorem scanStr_char_step
 characters `cs`), followed by the closing quote, `scanStr` returns the decoded string: it decodes
 the whole body and unescapes exactly when some character was escaped. Proved by induction on `cs`
 via `scanStr_char_step`. -/
-theorem scanStr_walk
-    (arr : ByteArray)
-    (q0 : Nat)
-    (body : String)
-    : ∀ (cs : List Char) (q : Nat) (esc : Bool),
+theorem scanStr_walk (arr : ByteArray) (q0 : Nat) (body : String) :
+    ∀ (cs : List Char) (q : Nat) (esc : Bool),
       (∀ j, j < (ebytes cs).length → arr[q + j]! = (ebytes cs)[j]!) →
       arr[q + (ebytes cs).length]! = 34 →
       q + (ebytes cs).length < arr.size →
@@ -569,7 +542,8 @@ theorem scanStr_walk
 /-- The data-list of `(escape s).toUTF8` equals `ebytes s.toList`. -/
 theorem escape_toUTF8_data_toList
     (s : String)
-    : (escape s).toUTF8.data.toList = ebytes s.toList := by
+    : (escape s).toUTF8.data.toList = ebytes s.toList
+    := by
   rw [String.toUTF8_eq_toByteArray, ← String.utf8Encode_toList,
       GripProps.Bytes.utf8Encode_data_toList]
   simp only [escape, String.toList_ofList, ebytes]
@@ -577,7 +551,8 @@ theorem escape_toUTF8_data_toList
 /-- `(escape s).toUTF8.size = (ebytes s.toList).length`. -/
 theorem escape_toUTF8_size
     (s : String)
-    : (escape s).toUTF8.size = (ebytes s.toList).length := by
+    : (escape s).toUTF8.size = (ebytes s.toList).length
+    := by
   rw [← ByteArray.size_data, ← Array.length_toList, escape_toUTF8_data_toList]
 
 /-- `getElem!` on `(escape s).toUTF8` at `i` equals `(ebytes s.toList)[i]!`. -/
@@ -585,7 +560,8 @@ theorem escape_toUTF8_getElem!
     (s : String)
     (i : Nat)
     (hi : i < (ebytes s.toList).length)
-    : (escape s).toUTF8[i]! = (ebytes s.toList)[i]! := by
+    : (escape s).toUTF8[i]! = (ebytes s.toList)[i]!
+    := by
   rw [GripProps.Bytes.getElem!_eq_toList, escape_toUTF8_data_toList]
 
 /-- Two ByteArrays are equal when their sizes and `getElem!` values agree element-wise. -/
@@ -594,7 +570,8 @@ theorem bytearray_eq_of_getElem!
     {a b : ByteArray}
     (hsize : a.size = b.size)
     (h : ∀ i, i < a.size → a[i]! = b[i]!)
-    : a = b := by
+    : a = b
+    := by
   apply ByteArray.ext_getElem hsize
   intro i hi hi'
   rw [← getElem!_pos a i hi, ← getElem!_pos b i hi']
@@ -606,7 +583,8 @@ theorem getElem!_extract
     (s e i : Nat)
     (he : e ≤ arr.size)
     (hi : i < e - s)
-    : (arr.extract s e)[i]! = arr[s + i]! := by
+    : (arr.extract s e)[i]! = arr[s + i]!
+    := by
   have hext : i < (arr.extract s e).size := by
     simp [ByteArray.size_extract, Nat.min_eq_left he]; omega
   have h2 : s + i < arr.size := by omega
@@ -623,7 +601,8 @@ theorem extract_eq_escape_toUTF8
     (s : String)
     (hbound : q + 1 + (ebytes s.toList).length < arr.size)
     (hcontent : ∀ j, j < (ebytes s.toList).length → arr[q + 1 + j]! = (ebytes s.toList)[j]!)
-    : arr.extract (q + 1) (q + 1 + (ebytes s.toList).length) = (escape s).toUTF8 := by
+    : arr.extract (q + 1) (q + 1 + (ebytes s.toList).length) = (escape s).toUTF8
+    := by
   set k := (ebytes s.toList).length
   apply bytearray_eq_of_getElem!
   · rw [ByteArray.size_extract,

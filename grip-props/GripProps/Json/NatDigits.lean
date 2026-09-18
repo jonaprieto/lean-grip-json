@@ -27,7 +27,8 @@ def H (a : Nat) (c : Char) : Nat := a * 10 + (c.toNat - 48)
 /-- `toDigitsCore` prepends the digits of `n` to its accumulator. -/
 theorem toDigitsCore_append
     : ∀ (fuel n : Nat) (ds : List Char),
-      Nat.toDigitsCore 10 fuel n ds = Nat.toDigitsCore 10 fuel n [] ++ ds := by
+      Nat.toDigitsCore 10 fuel n ds = Nat.toDigitsCore 10 fuel n [] ++ ds
+    := by
   intro fuel
   induction fuel with
   | zero => intro n ds; rfl
@@ -44,7 +45,8 @@ theorem toDigitsCore_append
 theorem digitChar_toNat_sub
     (d : Nat)
     (hd : d < 10)
-    : (Nat.digitChar d).toNat - 48 = d := by
+    : (Nat.digitChar d).toNat - 48 = d
+    := by
   interval_cases d <;> decide
 
 /-- The Horner fold over `n`'s decimal digits recovers `n`. -/
@@ -53,7 +55,8 @@ theorem foldl_toDigitsCore
     : ∀ (fuel : Nat),
       0 < fuel →
       n < 10 ^ fuel →
-      (Nat.toDigitsCore 10 fuel n []).foldl H 0 = n := by
+      (Nat.toDigitsCore 10 fuel n []).foldl H 0 = n
+    := by
   induction n using Nat.strong_induction_on with
   | _ n ih =>
     intro fuel hf hn
@@ -84,7 +87,8 @@ theorem digitChar_bound
     (d : Nat)
     (hd : d < 10)
     : 48 ≤ (Nat.digitChar d).toNat ∧
-      (Nat.digitChar d).toNat ≤ 57 := by
+      (Nat.digitChar d).toNat ≤ 57
+    := by
   interval_cases d <;> decide
 
 /-- Every character of `Nat.toDigits 10 k` is a decimal digit. -/
@@ -92,7 +96,8 @@ theorem mem_toDigits_bound
     (k : Nat)
     : ∀ c ∈ Nat.toDigits 10 k,
       48 ≤ c.toNat ∧
-      c.toNat ≤ 57 := by
+      c.toNat ≤ 57
+    := by
   have core : ∀ (fuel n : Nat) (ds : List Char),
       (∀ c ∈ ds, 48 ≤ c.toNat ∧ c.toNat ≤ 57) →
       ∀ c ∈ Nat.toDigitsCore 10 fuel n ds, 48 ≤ c.toNat ∧ c.toNat ≤ 57 := by
@@ -118,7 +123,8 @@ theorem mem_toDigits_bound
 /-- **Decimal fold inversion.** Folding the Horner step over `Nat.repr n`'s characters gives `n`. -/
 theorem foldl_repr
     (n : Nat)
-    : (Nat.repr n).toList.foldl H 0 = n := by
+    : (Nat.repr n).toList.foldl H 0 = n
+    := by
   rw [Nat.repr, String.toList_ofList, Nat.toDigits]
   exact foldl_toDigitsCore n (n + 1) (by omega) (by
     calc n < n + 1 := by omega
@@ -127,20 +133,23 @@ theorem foldl_repr
 /-- `Nat.repr n`'s character list is `Nat.toDigits 10 n`. -/
 theorem repr_toList
     (n : Nat)
-    : (Nat.repr n).toList = Nat.toDigits 10 n := by
+    : (Nat.repr n).toList = Nat.toDigits 10 n
+    := by
   rw [Nat.repr, String.toList_ofList]
 
 /-- `Nat.repr n`'s length is the digit count. -/
 theorem repr_length
     (n : Nat)
-    : (Nat.repr n).length = (Nat.toDigits 10 n).length := by
+    : (Nat.repr n).length = (Nat.toDigits 10 n).length
+    := by
   rw [Nat.repr, String.length_ofList]
 
 /-- The Horner fold over `Nat.toDigits 10 n` recovers `n` (the `foldl_repr` special case
 through `repr_toList`). -/
 theorem foldl_toDigits
     (n : Nat)
-    : (Nat.toDigits 10 n).foldl H 0 = n := by
+    : (Nat.toDigits 10 n).foldl H 0 = n
+    := by
   have := foldl_repr n
   rwa [Nat.repr, String.toList_ofList] at this
 
@@ -152,7 +161,8 @@ theorem toDigitsCore_head_nonzero
       ∃ c rest,
       Nat.toDigitsCore 10 fuel n [] = c :: rest ∧
       49 ≤ c.toNat ∧
-      c.toNat ≤ 57 := by
+      c.toNat ≤ 57
+    := by
   intro fuel
   induction fuel with
   | zero => intro n hn hf; omega
@@ -193,7 +203,8 @@ theorem toDigits_head_pos
     (n : Nat)
     (hn : 0 < n)
     : 49 ≤ (Nat.toDigits 10 n).head!.toNat ∧
-      (Nat.toDigits 10 n).head!.toNat ≤ 57 := by
+      (Nat.toDigits 10 n).head!.toNat ≤ 57
+    := by
   rw [Nat.toDigits]
   obtain ⟨c, rest, hceq, h49, h57⟩ := toDigitsCore_head_nonzero (n + 1) n hn (by omega) (by
     calc n < n + 1 := by omega
@@ -210,7 +221,8 @@ theorem isDigit19_of_toNat_bounds
     (b : UInt8)
     (h49 : 49 ≤ b.toNat)
     (h57 : b.toNat ≤ 57)
-    : Grip.Ascii.isDigit19 b = true := by
+    : Grip.Ascii.isDigit19 b = true
+    := by
   simp only [Grip.Ascii.isDigit19, Bool.and_eq_true, decide_eq_true_eq, UInt8.le_iff_toNat_le,
     show (49 : UInt8).toNat = 49 from by decide, show (57 : UInt8).toNat = 57 from by decide]
   exact ⟨h49, h57⟩
@@ -220,7 +232,8 @@ theorem isDigit_of_toNat_bounds
     (b : UInt8)
     (h48 : 48 ≤ b.toNat)
     (h57 : b.toNat ≤ 57)
-    : Grip.Ascii.isDigit b = true := by
+    : Grip.Ascii.isDigit b = true
+    := by
   simp only [Grip.Ascii.isDigit, Bool.and_eq_true, decide_eq_true_eq, UInt8.le_iff_toNat_le,
     show (48 : UInt8).toNat = 48 from by decide, show (57 : UInt8).toNat = 57 from by decide]
   exact ⟨h48, h57⟩
@@ -228,7 +241,8 @@ theorem isDigit_of_toNat_bounds
 /-- UTF8 byte list of `Nat.repr n` = digit chars mapped to their byte values. -/
 theorem repr_toUTF8_data_eq
     (n : Nat)
-    : (Nat.repr n).toUTF8.data.toList = (Nat.toDigits 10 n).map (fun c => UInt8.ofNat c.toNat) := by
+    : (Nat.repr n).toUTF8.data.toList = (Nat.toDigits 10 n).map (fun c => UInt8.ofNat c.toNat)
+    := by
   rw [show (Nat.repr n).toUTF8 = (Nat.toDigits 10 n).utf8Encode from by
     rw [String.toUTF8_eq_toByteArray, ← String.utf8Encode_toList, Nat.repr, String.toList_ofList]]
   rw [GripProps.Bytes.utf8Encode_data_toList]
@@ -238,14 +252,16 @@ theorem repr_toUTF8_data_eq
 /-- The UTF-8 size of `Nat.repr n` is its digit count. -/
 theorem repr_toUTF8_size
     (n : Nat)
-    : (Nat.repr n).toUTF8.size = (Nat.toDigits 10 n).length := by
+    : (Nat.repr n).toUTF8.size = (Nat.toDigits 10 n).length
+    := by
   rw [← ByteArray.size_data, ← Array.length_toList, repr_toUTF8_data_eq, List.length_map]
 
 /-- The `i`-th UTF-8 byte of `Nat.repr n` is the `i`-th digit character's byte value. -/
 theorem repr_toUTF8_getElem!
     (n i : Nat)
     (hi : i < (Nat.toDigits 10 n).length)
-    : (Nat.repr n).toUTF8[i]! = UInt8.ofNat (Nat.toDigits 10 n)[i]!.toNat := by
+    : (Nat.repr n).toUTF8[i]! = UInt8.ofNat (Nat.toDigits 10 n)[i]!.toNat
+    := by
   rw [GripProps.Bytes.getElem!_eq_toList, repr_toUTF8_data_eq,
       getElem!_pos _ i (by rw [List.length_map]; exact hi),
       getElem!_pos _ i hi, List.getElem_map]
@@ -254,7 +270,8 @@ theorem repr_toUTF8_getElem!
 theorem repr_toUTF8_head_isDigit19
     (n : Nat)
     (hn : 0 < n)
-    : Grip.Ascii.isDigit19 (Nat.repr n).toUTF8[0]! = true := by
+    : Grip.Ascii.isDigit19 (Nat.repr n).toUTF8[0]! = true
+    := by
   have hne : Nat.toDigits 10 n ≠ [] := toDigits_nonempty n hn
   have hlen : 0 < (Nat.toDigits 10 n).length := List.length_pos_of_ne_nil hne
   rw [repr_toUTF8_getElem! n 0 hlen]
@@ -271,7 +288,8 @@ theorem repr_toUTF8_head_isDigit19
 theorem repr_toUTF8_getElem_isDigit
     (n i : Nat)
     (hi : i < (Nat.toDigits 10 n).length)
-    : Grip.Ascii.isDigit (Nat.repr n).toUTF8[i]! = true := by
+    : Grip.Ascii.isDigit (Nat.repr n).toUTF8[i]! = true
+    := by
   rw [repr_toUTF8_getElem! n i hi]
   have h_mem : (Nat.toDigits 10 n)[i]! ∈ Nat.toDigits 10 n := by
     rw [getElem!_pos (Nat.toDigits 10 n) i hi]; exact List.getElem_mem hi

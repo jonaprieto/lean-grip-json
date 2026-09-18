@@ -19,13 +19,9 @@ set_option maxHeartbeats 1000000
 namespace GripProps.Bytes
 
 /-- The internal `foldlM` loop, in `Id`, computes the `List.foldl` over the remaining bytes. -/
-theorem foldlM_loop_eq
-    {β : Type}
-    (f : β → UInt8 → β)
-    (arr : ByteArray)
-    (h : arr.size ≤ arr.size)
-    : ∀ (i j : Nat) (b : β),
-      j + i = arr.size →
+theorem foldlM_loop_eq {β : Type} (f : β → UInt8 → β) (arr : ByteArray)
+    (h : arr.size ≤ arr.size) :
+    ∀ (i j : Nat) (b : β), j + i = arr.size →
       ByteArray.foldlM.loop (m := Id) (fun x y => pure (f x y)) arr arr.size h i j b
         = (arr.data.toList.drop j).foldl f b := by
   intro i
@@ -58,7 +54,8 @@ theorem foldl_eq_data_toList
     (f : β → UInt8 → β)
     (b : β)
     (arr : ByteArray)
-    : arr.foldl f b 0 arr.size = arr.data.toList.foldl f b := by
+    : arr.foldl f b 0 arr.size = arr.data.toList.foldl f b
+    := by
   show (ByteArray.foldlM (m := Id) (fun x y => pure (f x y)) b arr 0 arr.size).run
       = arr.data.toList.foldl f b
   unfold ByteArray.foldlM
@@ -66,14 +63,9 @@ theorem foldl_eq_data_toList
   exact foldlM_loop_eq f arr (Nat.le_refl _) arr.size 0 b (by omega)
 
 /-- The internal loop over a bounded range computes the `List.foldl` over that slice of bytes. -/
-theorem foldlM_loop_range
-    {β : Type}
-    (f : β → UInt8 → β)
-    (arr : ByteArray)
-    (stop : Nat)
-    (h : stop ≤ arr.size)
-    : ∀ (i j : Nat) (b : β),
-      j + i = stop →
+theorem foldlM_loop_range {β : Type} (f : β → UInt8 → β) (arr : ByteArray) (stop : Nat)
+    (h : stop ≤ arr.size) :
+    ∀ (i j : Nat) (b : β), j + i = stop →
       ByteArray.foldlM.loop (m := Id) (fun x y => pure (f x y)) arr stop h i j b
         = ((arr.data.toList.drop j).take i).foldl f b := by
   intro i
@@ -103,7 +95,8 @@ theorem foldl_range_data
     (q q' : Nat)
     (hq' : q' ≤ arr.size)
     (hqq : q ≤ q')
-    : arr.foldl f b q q' = ((arr.data.toList.drop q).take (q' - q)).foldl f b := by
+    : arr.foldl f b q q' = ((arr.data.toList.drop q).take (q' - q)).foldl f b
+    := by
   show (ByteArray.foldlM (m := Id) (fun x y => pure (f x y)) b arr q q').run
       = ((arr.data.toList.drop q).take (q' - q)).foldl f b
   unfold ByteArray.foldlM
@@ -114,7 +107,8 @@ theorem foldl_range_data
 theorem getElem!_eq_toList
     (arr : ByteArray)
     (j : Nat)
-    : arr[j]! = arr.data.toList[j]! := by
+    : arr[j]! = arr.data.toList[j]!
+    := by
   rcases Nat.lt_or_ge j arr.size with h | h
   · have hj : j < arr.data.toList.length := by rw [Array.length_toList, ByteArray.size_data]; omega
     rw [getElem!_pos arr j h, ByteArray.getElem_eq_getElem_data, ← Array.getElem_toList,
@@ -133,7 +127,8 @@ theorem foldl_congr_match
     (h1 : q1 + n ≤ arr1.size)
     (h2 : q2 + n ≤ arr2.size)
     (hm : ∀ i, i < n → arr1[q1 + i]! = arr2[q2 + i]!)
-    : arr1.foldl f b q1 (q1 + n) = arr2.foldl f b q2 (q2 + n) := by
+    : arr1.foldl f b q1 (q1 + n) = arr2.foldl f b q2 (q2 + n)
+    := by
   rw [foldl_range_data f b arr1 q1 (q1 + n) (by omega) (by omega),
     foldl_range_data f b arr2 q2 (q2 + n) (by omega) (by omega)]
   congr 1
@@ -158,7 +153,8 @@ theorem foldl_congr_match
 /-- The byte list of a `List Char`'s UTF-8 encoding is the per-character encodings concatenated. -/
 theorem utf8Encode_data_toList
     (cs : List Char)
-    : (List.utf8Encode cs).data.toList = cs.flatMap String.utf8EncodeChar := by
+    : (List.utf8Encode cs).data.toList = cs.flatMap String.utf8EncodeChar
+    := by
   induction cs with
   | nil => simp [List.utf8Encode_nil]
   | cons c cs ih =>
@@ -169,7 +165,8 @@ theorem utf8Encode_data_toList
 /-- String append commutes with UTF-8 encoding. -/
 theorem toUTF8_append
     (s t : String)
-    : (s ++ t).toUTF8 = s.toUTF8 ++ t.toUTF8 := by
+    : (s ++ t).toUTF8 = s.toUTF8 ++ t.toUTF8
+    := by
   simp [String.toUTF8_eq_toByteArray, String.toByteArray_append]
 
 /-- In-bounds index into an appended array reads from the left part. -/
@@ -177,7 +174,8 @@ theorem ba_get!_append_left
     {i : Nat}
     {a b : ByteArray}
     (h : i < a.size)
-    : (a ++ b)[i]! = a[i]! := by
+    : (a ++ b)[i]! = a[i]!
+    := by
   rw [getElem!_pos (a ++ b) i (by rw [ByteArray.size_append]; omega),
       ByteArray.getElem_append_left h,
       getElem!_pos a i h]
@@ -188,7 +186,8 @@ theorem ba_get!_append_right
     {a b : ByteArray}
     (h : a.size ≤ i)
     (hi : i < (a ++ b).size)
-    : (a ++ b)[i]! = b[i - a.size]! := by
+    : (a ++ b)[i]! = b[i - a.size]!
+    := by
   rw [getElem!_pos (a ++ b) i hi,
       ByteArray.getElem_append_right h,
       getElem!_pos b (i - a.size) (by rw [ByteArray.size_append] at hi; omega)]
@@ -197,7 +196,8 @@ theorem ba_get!_append_right
 theorem ascii_encode
     (c : Char)
     (h : c.toNat ≤ 127)
-    : String.utf8EncodeChar c = [UInt8.ofNat c.toNat] := by
+    : String.utf8EncodeChar c = [UInt8.ofNat c.toNat]
+    := by
   have hval : c.val ≤ 127 := by rw [UInt32.le_iff_toNat_le]; exact h
   have hbyte : c.val.toUInt8 = UInt8.ofNat c.toNat := by
     rw [Char.toNat]; exact UInt8.toNat_inj.mp rfl
@@ -207,7 +207,8 @@ theorem ascii_encode
 theorem flatMap_ascii
     (cs : List Char)
     (h : ∀ c ∈ cs, c.toNat ≤ 127)
-    : cs.flatMap String.utf8EncodeChar = cs.map (fun c => UInt8.ofNat c.toNat) := by
+    : cs.flatMap String.utf8EncodeChar = cs.map (fun c => UInt8.ofNat c.toNat)
+    := by
   induction cs with
   | nil => simp
   | cons c cs ih =>
@@ -219,7 +220,8 @@ theorem flatMap_ascii
 theorem ofList_ascii_toUTF8_data_eq
     (cs : List Char)
     (h : ∀ c ∈ cs, c.toNat ≤ 127)
-    : (String.ofList cs).toUTF8.data.toList = cs.map (fun c => UInt8.ofNat c.toNat) := by
+    : (String.ofList cs).toUTF8.data.toList = cs.map (fun c => UInt8.ofNat c.toNat)
+    := by
   rw [show (String.ofList cs).toUTF8 = cs.utf8Encode from by
     rw [String.toUTF8_eq_toByteArray, ← String.utf8Encode_toList, String.toList_ofList]]
   rw [utf8Encode_data_toList]
@@ -230,7 +232,8 @@ theorem ofList_ascii_toUTF8_data_eq
 theorem ofList_ascii_toUTF8_size
     (cs : List Char)
     (h : ∀ c ∈ cs, c.toNat ≤ 127)
-    : (String.ofList cs).toUTF8.size = cs.length := by
+    : (String.ofList cs).toUTF8.size = cs.length
+    := by
   rw [← ByteArray.size_data, ← Array.length_toList, ofList_ascii_toUTF8_data_eq cs h,
       List.length_map]
 
@@ -241,7 +244,8 @@ theorem ofList_ascii_toUTF8_getElem!
     (i : Nat)
     (h : ∀ c ∈ cs, c.toNat ≤ 127)
     (hi : i < cs.length)
-    : (String.ofList cs).toUTF8[i]! = UInt8.ofNat cs[i]!.toNat := by
+    : (String.ofList cs).toUTF8[i]! = UInt8.ofNat cs[i]!.toNat
+    := by
   rw [getElem!_eq_toList, ofList_ascii_toUTF8_data_eq cs h,
       getElem!_pos _ i (by rw [List.length_map]; exact hi),
       getElem!_pos _ i hi, List.getElem_map]
@@ -254,7 +258,8 @@ theorem toUTF8_foldl
     (f : β → UInt8 → β)
     (b : β)
     (s : String)
-    : s.toUTF8.foldl f b 0 s.toUTF8.size = (s.toList.flatMap String.utf8EncodeChar).foldl f b := by
+    : s.toUTF8.foldl f b 0 s.toUTF8.size = (s.toList.flatMap String.utf8EncodeChar).foldl f b
+    := by
   rw [foldl_eq_data_toList,
     show s.toUTF8 = s.toList.utf8Encode from by
       rw [String.toUTF8_eq_toByteArray, ← String.utf8Encode_toList],

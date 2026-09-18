@@ -47,7 +47,8 @@ open Grip Grip.Examples.Json
 the whole input. -/
 def acceptsValidator
     (arr : ByteArray)
-    : Bool :=
+    : Bool
+    :=
   match json.run arr 0 with
   | .ok _ _  => true
   | .error _ => false
@@ -56,7 +57,8 @@ def acceptsValidator
 and the one a caller of grip's public API actually invokes -- parses the whole input. -/
 def acceptsDom
     (arr : ByteArray)
-    : Bool :=
+    : Bool
+    :=
   match Grip.Json.parse arr with
   | .ok _    => true
   | .error _ => false
@@ -69,7 +71,8 @@ private
 def classify
     (name : String)
     (accepted : Bool)
-    : (Nat × Nat × Nat × Nat × Nat × Nat × Bool) :=
+    : (Nat × Nat × Nat × Nat × Nat × Nat × Bool)
+    :=
   -- returns (yTot,yOk, nTot,nOk, iAcc,iRej, regression)
   if name.startsWith "y_" then
     (1, (if accepted then 1 else 0), 0, 0, 0, 0, !accepted)
@@ -95,7 +98,8 @@ def Stats.step
     (s : Stats)
     (name : String)
     (accepted : Bool)
-    : Stats :=
+    : Stats
+    :=
   let (yt, yo, nt, no, ia, ir, regr) := classify name accepted
   { yTot := s.yTot + yt, yOk := s.yOk + yo
     nTot := s.nTot + nt, nOk := s.nOk + no
@@ -105,7 +109,8 @@ def Stats.step
 private
 def Stats.summary
     (s : Stats)
-    : String :=
+    : String
+    :=
   s!"y: {s.yOk}/{s.yTot} accepted · n: {s.nOk}/{s.nTot} rejected \
     (allow-accept {nAllowAccept.length}) · i: {s.iAcc} accepted / {s.iRej} rejected"
 
@@ -150,7 +155,9 @@ def batch : IO UInt32 := do
     IO.eprintln "conformance gate failed" -- see per-section detail above
     return 1
 
-def main (args : List String) : IO UInt32 := do
+def main
+    (args : List String)
+    : IO UInt32 := do
   match args with
   | [file] =>
     let arr ← IO.FS.readBinFile file

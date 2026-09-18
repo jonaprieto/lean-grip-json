@@ -107,7 +107,8 @@ handled leniently rather than rejected. -/
 def uStep
     (st : UState)
     (c : Char)
-    : UState :=
+    : UState
+    :=
   if st.uLeft > 0 then
     let acc := st.uAcc * 16 + Grip.Ascii.hexValue (UInt8.ofNat c.toNat)
     if st.uLeft == 1 then
@@ -217,7 +218,8 @@ theorem escEnd_gt
     (arr : ByteArray)
     (q q' : Nat)
     (h : escEnd arr q = some q')
-    : q < q' := by
+    : q < q'
+    := by
   rw [escEnd] at h
   split at h
   · split at h
@@ -261,7 +263,8 @@ theorem escEnd_le
     (arr : ByteArray)
     (q q' : Nat)
     (h : escEnd arr q = some q')
-    : q' ≤ arr.size := by
+    : q' ≤ arr.size
+    := by
   rw [escEnd] at h
   split at h
   · rename_i h1
@@ -289,7 +292,8 @@ theorem scanStr_err
     (hq : q ≤ arr.size)
     (h : scanStr arr q0 q esc = .error e)
     : q0 ≤ e.pos ∧
-      e.pos ≤ arr.size := by
+      e.pos ≤ arr.size
+    := by
   rw [scanStr] at h
   split at h
   · rename_i hlt
@@ -332,7 +336,8 @@ theorem scanStr_gt
     (esc : Bool)
     (a : String)
     (h : scanStr arr q0 q esc = .ok a q')
-    : q < q' := by
+    : q < q'
+    := by
   rw [scanStr] at h
   split at h
   · rename_i hq
@@ -365,7 +370,8 @@ theorem scanStr_le
     (esc : Bool)
     (a : String)
     (h : scanStr arr q0 q esc = .ok a q')
-    : q' ≤ arr.size := by
+    : q' ≤ arr.size
+    := by
   rw [scanStr] at h
   split at h
   · rename_i hq
@@ -615,7 +621,8 @@ theorem bodyFwd_gt
     (b : β)
     (q' : Nat)
     (h : bodyFwd push elem close closeName arr acc first q = .ok b q')
-    : q < q' := by
+    : q < q'
+    := by
   rw [bodyFwd] at h
   simp only [] at h
   have hge := scanFwd_ge arr Ascii.isWs q
@@ -671,7 +678,8 @@ theorem bodyFwd_err
     (hq : q ≤ arr.size)
     (h : bodyFwd push elem close closeName arr acc first q = .error e)
     : q ≤ e.pos ∧
-      e.pos ≤ arr.size := by
+      e.pos ≤ arr.size
+    := by
   rw [bodyFwd] at h
   simp only [] at h
   have hge := scanFwd_ge arr Ascii.isWs q
@@ -744,7 +752,8 @@ theorem bodyFwd_le
     (b : β)
     (q' : Nat)
     (h : bodyFwd push elem close closeName arr acc first q = .ok b q')
-    : q' ≤ arr.size := by
+    : q' ≤ arr.size
+    := by
   rw [bodyFwd] at h
   simp only [] at h
   have hge := scanFwd_ge arr Ascii.isWs q
@@ -800,7 +809,8 @@ element reach the caller instead of being turned into "expected `]`" at the sepa
     `GParser.fixFuel valueBody` directly. -/
 def valueBody
     (rec : GParser conditional Json)
-    : GParser conditional Json :=
+    : GParser conditional Json
+    :=
   -- The container sub-parsers reference `rec`, so `fix` rebuilds them on every entry.
   -- Building them inside the taken dispatch arm (not eagerly before the dispatch) means a
   -- leaf value (string/number/keyword) constructs no array/object machinery at all.
@@ -855,7 +865,8 @@ named control escapes map to a two-character sequence, other control bytes to `\
 other character to itself. -/
 def escapeChar
     (c : Char)
-    : List Char :=
+    : List Char
+    :=
   if c == '"' then ['\\', '"']
   else if c == '\\' then ['\\', '\\']
   else if c == '\n' then ['\\', 'n']
@@ -877,7 +888,8 @@ def escape (s : String) : String := String.ofList (s.toList.flatMap escapeChar)
 def renderNum
     (m : Int)
     (e : Nat)
-    : String :=
+    : String
+    :=
   if e == 0 then (if m < 0 then "-" else "") ++ toString m.natAbs
   else
     let ds := List.replicate (e + 1 - (toString m.natAbs).length) '0' ++ (toString m.natAbs).toList
@@ -889,7 +901,8 @@ zeroes for large scales while preserving the exact `num m e` representation on p
 def renderNumScientific
     (m : Int)
     (e : Nat)
-    : String :=
+    : String
+    :=
   (if m < 0 then "-" else "") ++ toString m.natAbs ++ "e-" ++ toString e
 
 /-- Serialize a numeric DOM value. Ordinary values retain their canonical expanded decimal form;
@@ -898,7 +911,8 @@ the exponent's digit count rather than its value. -/
 def renderNumber
     (m : Int)
     (e : Nat)
-    : String :=
+    : String
+    :=
   if e > maxExp then renderNumScientific m e else renderNum m e
 
 /-- Join a list of strings with a separator, proof-friendly alternative to `String.intercalate`.
