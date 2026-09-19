@@ -5,6 +5,8 @@ Authors: Jonathan Prieto-Cubides
 -/
 import GripJson
 
-def main : IO Unit := do
+def main
+    : IO Unit
+    := do
   let parsed := Grip.Json.parseString "{\"answer\": 42}"
   if parsed.isOk then pure () else throw <| IO.userError "README example failed"

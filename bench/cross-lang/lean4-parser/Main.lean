@@ -20,20 +20,36 @@ open Parser Char
 /-- Char-level parser monad (the shipped example's idiom) -/
 protected abbrev P := SimpleParser String.Slice Char
 
-@[inline] private def isWs (c : Char) : Bool :=
+@[inline]
+private
+def isWs
+    (c : Char)
+    : Bool
+    :=
   c == ' ' || c == '\n' || c == '\r' || c == '\t'
-@[inline] private def isNum (c : Char) : Bool :=
+@[inline]
+private
+def isNum
+    (c : Char)
+    : Bool
+    :=
   c.isDigit || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E'
 @[inline] private def isAlpha (c : Char) : Bool := c.isAlpha
 
 /-- Skip whitespace (non-allocating: foldl via dropMany) -/
-@[inline] def ws : L4pJsonChar.P Unit :=
+@[inline]
+def ws
+    : L4pJsonChar.P Unit
+    :=
   dropMany (tokenFilter isWs)
 
 -- partiality: this follows the upstream parser fixture's direct input-consuming loop.
 /-- Escape-aware string body: skip chars until an unescaped `"`, treating `\` as escaping the
     next char (so `\"` does not end the string). Needed for citm/twitter, which contain `\"`. -/
-partial def skipStrBody : L4pJsonChar.P Unit := do
+partial
+def skipStrBody
+    : L4pJsonChar.P Unit
+    := do
   let c ← anyToken
   if c == '"' then return ()
   else if c == '\\' then do let _ ← anyToken; skipStrBody
@@ -41,7 +57,9 @@ partial def skipStrBody : L4pJsonChar.P Unit := do
 
 /-- Skip a string: consume the opening '"', then the escape-aware body (which consumes the
     closing '"'). -/
-def skipStr : L4pJsonChar.P Unit := do
+def skipStr
+    : L4pJsonChar.P Unit
+    := do
   drop 1 (token '"')
   skipStrBody
 
@@ -50,7 +68,11 @@ mutual
 -- partiality: these mutually recursive parser fixtures preserve the upstream benchmark shape.
 
 /-- Parse a JSON value; returns leaf count -/
-protected partial def value : L4pJsonChar.P Nat := do
+protected
+partial
+def value
+    : L4pJsonChar.P Nat
+    := do
   ws
   let c ← anyToken
   if c == '{' then L4pJsonChar.object
@@ -72,7 +94,11 @@ protected partial def value : L4pJsonChar.P Nat := do
     After `{` is already consumed by `value`, this reads: ws (} | pair (, pair)*) ws }
 -/
 -- partiality: recursive object parsing is part of the upstream benchmark fixture.
-protected partial def object : L4pJsonChar.P Nat := do
+protected
+partial
+def object
+    : L4pJsonChar.P Nat
+    := do
   ws
   match ← option? (token '}') with
   | some _ => return 0   -- empty object: `}`
@@ -88,7 +114,11 @@ protected partial def object : L4pJsonChar.P Nat := do
 
 /-- Parse one key:value pair (key string not counted, value counted) -/
 -- partiality: recursive object parsing is part of the upstream benchmark fixture.
-protected partial def pair : L4pJsonChar.P Nat := do
+protected
+partial
+def pair
+    : L4pJsonChar.P Nat
+    := do
   ws
   skipStr       -- key (not counted)
   ws
@@ -100,7 +130,11 @@ protected partial def pair : L4pJsonChar.P Nat := do
     After `[` is already consumed by `value`, this reads: ws (] | value (, value)*) ws ]
 -/
 -- partiality: recursive array parsing is part of the upstream benchmark fixture.
-protected partial def array : L4pJsonChar.P Nat := do
+protected
+partial
+def array
+    : L4pJsonChar.P Nat
+    := do
   ws
   match ← option? (token ']') with
   | some _ => return 0   -- empty array: `]`
@@ -131,7 +165,11 @@ end L4pJsonChar
 
 @[noinline] def barrierStr (_k : Nat) (s : String) : String := s
 
-@[noinline] def parseL4p (s : String) : Nat :=
+@[noinline]
+def parseL4p
+    (s : String)
+    : Nat
+    :=
   match L4pJsonChar.parse s with
   | some n => n
   | none   => 0
@@ -139,7 +177,8 @@ end L4pJsonChar
 def sampleMs
     (reps : Nat)
     (act : Nat → Nat)
-    : IO (Float × Float) := do
+    : IO (Float × Float)
+    := do
   let mut samples : Array Float := #[]
   for i in [0:reps] do
     let t0 ← IO.monoNanosNow
@@ -151,7 +190,8 @@ def sampleMs
 
 def main
     (args : List String)
-    : IO Unit := do
+    : IO Unit
+    := do
   -- Read as String (Char-level parser operates on String). Dataset path is argv[1].
   let file := args.getD 0 "/Users/jonaprieto/research/lean-grip/bench/data/canada.json"
   let base := (System.FilePath.mk file).fileName.getD file

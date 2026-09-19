@@ -5,5 +5,7 @@ Authors: Jonathan Prieto-Cubides
 -/
 import GripJson
 
-def main : IO Unit := do
+def main
+    : IO Unit
+    := do
   IO.println (repr (Grip.Json.parseString "{\"answer\":42}"))

@@ -36,17 +36,29 @@ def jsonLeaves
   | .arr xs  => xs.foldl (fun a j => a + jsonLeaves j) 0
   | .obj kvs => kvs.foldl (fun a kv => a + jsonLeaves kv.2) 0
 
-@[noinline] def parseJson (arr : ByteArray) : Nat :=
+@[noinline]
+def parseJson
+    (arr : ByteArray)
+    : Nat
+    :=
   match Grip.Examples.Json.json.run arr 0 with
   | .ok n _  => n
   | .error _ => 0
 
-@[noinline] def parseGripJson (arr : ByteArray) : Nat :=
+@[noinline]
+def parseGripJson
+    (arr : ByteArray)
+    : Nat
+    :=
   match Grip.Json.parser.run arr 0 with
   | .ok j _  => jsonLeaves j
   | .error _ => 0
 
-@[noinline] def parseLeanJson (s : String) : Nat :=
+@[noinline]
+def parseLeanJson
+    (s : String)
+    : Nat
+    :=
   match Lean.Json.parse s with
   | .ok j    => leanJsonLeaves j
   | .error _ => 0
@@ -63,7 +75,8 @@ structure Stats where
 def sampleMs
     (reps : Nat)
     (act : Nat → Nat)
-    : IO Stats := do
+    : IO Stats
+    := do
   let mut samples : Array Float := #[]
   for i in [0:reps] do
     let t0 ← IO.monoNanosNow
@@ -84,7 +97,8 @@ def benchJson
     (src : ByteArray)
     (expected : Nat)
     (p : ByteArray → Nat)
-    : IO Unit := do
+    : IO Unit
+    := do
   let count := p src
   if count != expected then
     throw <| IO.userError s!"{name}: expected {expected}, got {count}"
@@ -96,7 +110,8 @@ def benchJsonString
     (src : String)
     (expected : Nat)
     (p : String → Nat)
-    : IO Unit := do
+    : IO Unit
+    := do
   let count := p src
   if count != expected then
     throw <| IO.userError s!"{name}: expected {expected}, got {count}"
@@ -105,7 +120,8 @@ def benchJsonString
 
 def main
     (args : List String)
-    : IO Unit := do
+    : IO Unit
+    := do
   let file := args.getD 1 "bench/data/canada.json"
   if args.head? == some "once" then
     let src ← IO.FS.readBinFile file

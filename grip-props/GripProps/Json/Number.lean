@@ -25,12 +25,17 @@ namespace GripProps.Number
 
 /-- Single `numByte` step on a decimal digit, phase 0 or 1: accumulate the mantissa (and, in
 phase 1, count a fractional digit); other fields unchanged. -/
-theorem numByte_digit (st : NState) (c : Char) (hc1 : 48 ≤ c.toNat) (hc2 : c.toNat ≤ 57) :
-    numByte st (UInt8.ofNat c.toNat) =
+theorem numByte_digit
+    (st : NState)
+    (c : Char)
+    (hc1 : 48 ≤ c.toNat)
+    (hc2 : c.toNat ≤ 57)
+    : numByte st (UInt8.ofNat c.toNat) =
       (if st.phase = 1 then
         { st with mant := st.mant * 10 + (c.toNat - 48), fracLen := st.fracLen + 1 }
        else if st.phase = 0 then { st with mant := st.mant * 10 + (c.toNat - 48) }
-       else { st with expVal := st.expVal * 10 + (c.toNat - 48) }) := by
+       else { st with expVal := st.expVal * 10 + (c.toNat - 48) })
+    := by
   have hsize : UInt8.size = 256 := by decide
   have hb : (UInt8.ofNat c.toNat).toNat = c.toNat := UInt8.toNat_ofNat_of_lt' (by omega)
   have h48 : ((48 : UInt8)).toNat = 48 := by decide
@@ -58,10 +63,14 @@ theorem numByte_digit (st : NState) (c : Char) (hc1 : 48 ≤ c.toNat) (hc2 : c.t
 
 /-- A decimal digit character's byte is none of the structural bytes `numByte` special-cases, so
 `numByte` takes the digit branch and, in phase 0, folds it into the mantissa. -/
-theorem foldl_numByte_digits (ds : List Char) (st : NState) (hp : st.phase = 0)
-    (hd : ∀ c ∈ ds, 48 ≤ c.toNat ∧ c.toNat ≤ 57) :
-    ds.foldl (fun s c => numByte s (UInt8.ofNat c.toNat)) st
-      = { st with mant := ds.foldl (fun a c => a * 10 + (c.toNat - 48)) st.mant } := by
+theorem foldl_numByte_digits
+    (ds : List Char)
+    (st : NState)
+    (hp : st.phase = 0)
+    (hd : ∀ c ∈ ds, 48 ≤ c.toNat ∧ c.toNat ≤ 57)
+    : ds.foldl (fun s c => numByte s (UInt8.ofNat c.toNat)) st
+      = { st with mant := ds.foldl (fun a c => a * 10 + (c.toNat - 48)) st.mant }
+    := by
   induction ds generalizing st with
   | nil => simp
   | cons c cs ih =>
@@ -72,11 +81,15 @@ theorem foldl_numByte_digits (ds : List Char) (st : NState) (hp : st.phase = 0)
     simp [List.foldl_cons]
 
 /-- Phase-1 (fractional) `numByte` fold: accumulate the mantissa and count each digit. -/
-theorem foldl_numByte_frac (ds : List Char) (st : NState) (hp : st.phase = 1)
-    (hd : ∀ c ∈ ds, 48 ≤ c.toNat ∧ c.toNat ≤ 57) :
-    ds.foldl (fun s c => numByte s (UInt8.ofNat c.toNat)) st
+theorem foldl_numByte_frac
+    (ds : List Char)
+    (st : NState)
+    (hp : st.phase = 1)
+    (hd : ∀ c ∈ ds, 48 ≤ c.toNat ∧ c.toNat ≤ 57)
+    : ds.foldl (fun s c => numByte s (UInt8.ofNat c.toNat)) st
       = { st with mant := ds.foldl (fun a c => a * 10 + (c.toNat - 48)) st.mant,
-                  fracLen := st.fracLen + ds.length } := by
+                  fracLen := st.fracLen + ds.length }
+    := by
   induction ds generalizing st with
   | nil => simp
   | cons c cs ih =>
@@ -87,29 +100,41 @@ theorem foldl_numByte_frac (ds : List Char) (st : NState) (hp : st.phase = 1)
     simp [List.foldl_cons, Nat.add_assoc, Nat.add_comm 1]
 
 /-- Folding `numByte` over an ASCII digit string's UTF-8 bytes accumulates the mantissa. -/
-theorem foldl_numByte_ascii (cs : List Char) (st : NState) (hp : st.phase = 0)
-    (hd : ∀ c ∈ cs, 48 ≤ c.toNat ∧ c.toNat ≤ 57) :
-    (cs.flatMap String.utf8EncodeChar).foldl numByte st
-      = { st with mant := cs.foldl (fun a c => a * 10 + (c.toNat - 48)) st.mant } := by
+theorem foldl_numByte_ascii
+    (cs : List Char)
+    (st : NState)
+    (hp : st.phase = 0)
+    (hd : ∀ c ∈ cs, 48 ≤ c.toNat ∧ c.toNat ≤ 57)
+    : (cs.flatMap String.utf8EncodeChar).foldl numByte st
+      = { st with mant := cs.foldl (fun a c => a * 10 + (c.toNat - 48)) st.mant }
+    := by
   rw [flatMap_ascii cs (fun c hc => by have := hd c hc; omega), List.foldl_map]
   exact foldl_numByte_digits cs st hp hd
 
 /-- Phase-1 byte-form fold: over an ASCII digit string's UTF-8 bytes, accumulate mantissa and
 count fractional digits. -/
-theorem foldl_numByte_frac_ascii (cs : List Char) (st : NState) (hp : st.phase = 1)
-    (hd : ∀ c ∈ cs, 48 ≤ c.toNat ∧ c.toNat ≤ 57) :
-    (cs.flatMap String.utf8EncodeChar).foldl numByte st
+theorem foldl_numByte_frac_ascii
+    (cs : List Char)
+    (st : NState)
+    (hp : st.phase = 1)
+    (hd : ∀ c ∈ cs, 48 ≤ c.toNat ∧ c.toNat ≤ 57)
+    : (cs.flatMap String.utf8EncodeChar).foldl numByte st
       = { st with mant := cs.foldl (fun a c => a * 10 + (c.toNat - 48)) st.mant,
-                  fracLen := st.fracLen + cs.length } := by
+                  fracLen := st.fracLen + cs.length }
+    := by
   rw [flatMap_ascii cs (fun c hc => by have := hd c hc; omega), List.foldl_map]
   exact foldl_numByte_frac cs st hp hd
 
 /-- Phase-2 (exponent) `numByte` fold: accumulate the decimal exponent and preserve all
 other decoder state. -/
-theorem foldl_numByte_exp_ascii (cs : List Char) (st : NState) (hp : st.phase = 2)
-    (hd : ∀ c ∈ cs, 48 ≤ c.toNat ∧ c.toNat ≤ 57) :
-    (cs.flatMap String.utf8EncodeChar).foldl numByte st
-      = { st with expVal := cs.foldl (fun a c => a * 10 + (c.toNat - 48)) st.expVal } := by
+theorem foldl_numByte_exp_ascii
+    (cs : List Char)
+    (st : NState)
+    (hp : st.phase = 2)
+    (hd : ∀ c ∈ cs, 48 ≤ c.toNat ∧ c.toNat ≤ 57)
+    : (cs.flatMap String.utf8EncodeChar).foldl numByte st
+      = { st with expVal := cs.foldl (fun a c => a * 10 + (c.toNat - 48)) st.expVal }
+    := by
   rw [flatMap_ascii cs (fun c hc => by have := hd c hc; omega), List.foldl_map]
   induction cs generalizing st with
   | nil => simp
@@ -156,9 +181,13 @@ theorem fold_frac_chars (intg fracg : List Char) (st : NState) (hp : st.phase = 
 /-- **Fractional number round-trip.** For a nonnegative `m` and `e > 0`, decoding the bytes of
 `renderNum m e` recovers `num m e`. The zero-padding contributes nothing to the mantissa and the
 fractional length equals `e`. -/
-theorem decode_renderNum_frac (m : Int) (hm : 0 ≤ m) (e : Nat) (he : 0 < e) :
-    decodeNumberBytes? (renderNum m e).toUTF8 0 (renderNum m e).toUTF8.size
-      = some (Json.num m e) := by
+theorem decode_renderNum_frac
+    (m : Int)
+    (hm : 0 ≤ m)
+    (e : Nat)
+    (he : 0 < e)
+    : decodeNumberBytes? (renderNum m e).toUTF8 0 (renderNum m e).toUTF8.size = some (Json.num m e)
+    := by
   have hna : m.natAbs = m.toNat := by omega
   have htl : (toString m.natAbs).toList = Nat.toDigits 10 m.toNat := by
     rw [hna]; exact GripProps.NatDigits.repr_toList _
@@ -204,9 +233,13 @@ theorem decode_renderNum_frac (m : Int) (hm : 0 ≤ m) (e : Nat) (he : 0 < e) :
 /-- **Negative fractional number round-trip.** For `m < 0` and `e > 0`. The leading `-` sets the
 sign flag before the fractional decode; the sign literal uses ordinary `++`, so unlike the
 integer case there is no `String.Internal.append` obstruction. -/
-theorem decode_renderNum_frac_neg (m : Int) (hm : m < 0) (e : Nat) (he : 0 < e) :
-    decodeNumberBytes? (renderNum m e).toUTF8 0 (renderNum m e).toUTF8.size
-      = some (Json.num m e) := by
+theorem decode_renderNum_frac_neg
+    (m : Int)
+    (hm : m < 0)
+    (e : Nat)
+    (he : 0 < e)
+    : decodeNumberBytes? (renderNum m e).toUTF8 0 (renderNum m e).toUTF8.size = some (Json.num m e)
+    := by
   have htl : (toString m.natAbs).toList = Nat.toDigits 10 m.natAbs :=
     GripProps.NatDigits.repr_toList _
   set len := (toString m.natAbs).length with hlen
@@ -253,9 +286,11 @@ theorem decode_renderNum_frac_neg (m : Int) (hm : m < 0) (e : Nat) (he : 0 < e) 
 /-- **Integer number round-trip.** For a nonnegative integer, decoding the bytes of its rendering
 recovers it. Composes the ByteArray/toUTF8 fold bridge, the digit-fold inversion, and the numByte
 accumulation. -/
-theorem decode_renderNum_int (m : Int) (hm : 0 ≤ m) :
-    decodeNumberBytes? (renderNum m 0).toUTF8 0 (renderNum m 0).toUTF8.size
-      = some (Json.num m 0) := by
+theorem decode_renderNum_int
+    (m : Int)
+    (hm : 0 ≤ m)
+    : decodeNumberBytes? (renderNum m 0).toUTF8 0 (renderNum m 0).toUTF8.size = some (Json.num m 0)
+    := by
   have hna : m.natAbs = m.toNat := by omega
   have hrn0 : renderNum m 0 = toString m.natAbs := by
     unfold renderNum; rw [if_neg (show ¬ m < 0 from by omega)]; simp
@@ -275,9 +310,11 @@ theorem decode_renderNum_int (m : Int) (hm : 0 ≤ m) :
 /-- **Negative-integer round-trip.** Restructuring `renderNum`'s `e = 0` case as
 `"-" ++ toString m.natAbs` (instead of `Int.repr`, whose `String.Internal.append` has no `toList`
 characterization in Lean 4.28) makes the negative branch decodable too. -/
-theorem decode_renderNum_int_neg (m : Int) (hm : m < 0) :
-    decodeNumberBytes? (renderNum m 0).toUTF8 0 (renderNum m 0).toUTF8.size
-      = some (Json.num m 0) := by
+theorem decode_renderNum_int_neg
+    (m : Int)
+    (hm : m < 0)
+    : decodeNumberBytes? (renderNum m 0).toUTF8 0 (renderNum m 0).toUTF8.size = some (Json.num m 0)
+    := by
   have hrn0 : renderNum m 0 = "-" ++ toString m.natAbs := by
     unfold renderNum; rw [if_pos (show m < 0 from hm)]; simp
   have hrn : (renderNum m 0).toList = '-' :: Nat.toDigits 10 m.natAbs := by
@@ -303,9 +340,13 @@ theorem decode_renderNum_int_neg (m : Int) (hm : m < 0) :
 /-- Scientific notation round-trip for large fractional exponents. The mantissa is rendered as
 an integer followed by `e-<exponent>`, so decoding produces the same exact `num m e` without
 materializing the fractional zero padding. -/
-theorem decode_renderNumScientific (m : Int) (e : Nat) (he : 0 < e) :
-    decodeNumberBytes? (renderNumScientific m e).toUTF8 0 (renderNumScientific m e).toUTF8.size
-      = some (Json.num m e) := by
+theorem decode_renderNumScientific
+    (m : Int)
+    (e : Nat)
+    (he : 0 < e)
+    : decodeNumberBytes? (renderNumScientific m e).toUTF8 0 (renderNumScientific m e).toUTF8.size
+      = some (Json.num m e)
+    := by
   have hdigits : (toString m.natAbs).toList = Nat.toDigits 10 m.natAbs :=
     GripProps.NatDigits.repr_toList _
   have hexp : (toString e).toList = Nat.toDigits 10 e :=

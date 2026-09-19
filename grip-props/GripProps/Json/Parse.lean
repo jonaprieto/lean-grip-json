@@ -378,10 +378,13 @@ theorem wsByte_run_stop
 
 /-- One-step unfolding of `fix`: its run is the body applied to the clamped self at the
 bytes-remaining fuel, behind the advance clamp. -/
-theorem fix_run_unroll (f : GParser conditional α → GParser conditional α) (arr : ByteArray)
-    (q : Nat) :
-    (GParser.fix f).run arr q
-      = clampAdvance arr q ((f (GParser.fixSelf f (arr.size - q))).run arr q) := by
+theorem fix_run_unroll
+    (f : GParser conditional α → GParser conditional α)
+    (arr : ByteArray)
+    (q : Nat)
+    : (GParser.fix f).run arr q
+      = clampAdvance arr q ((f (GParser.fixSelf f (arr.size - q))).run arr q)
+    := by
   show clampAdvance arr q (GParser.fixFuel f (arr.size - q + 1) arr q) = _
   rw [GParser.fixFuel_succ]
 
@@ -926,9 +929,13 @@ theorem value_run_str
     (jstr_run arr q s hbound h34 hcontent hclose)]
   exact clampAdvance_ok arr q (by omega) (by omega)
 
-private theorem renderNumScientific_append (m : Int) (e : Nat) :
-    renderNumScientific m e =
-      (if m < 0 then "-" else "") ++ toString m.natAbs ++ "e-" ++ toString e := by
+private
+theorem renderNumScientific_append
+    (m : Int)
+    (e : Nat)
+    : renderNumScientific m e =
+      (if m < 0 then "-" else "") ++ toString m.natAbs ++ "e-" ++ toString e
+    := by
   by_cases hm : m < 0
   · apply String.ext
     simp [renderNumScientific, hm, String.toList_append,
@@ -968,12 +975,15 @@ private theorem expo_run_scientific (arr : ByteArray) (q ep : Nat)
 /-- Byte view of a `pre ++ "e-" ++ post` string's UTF-8 encoding: the prefix bytes, then `e`
 (101), `-` (45), then the suffix bytes. One home for the append-index arithmetic the
 scientific-notation round-trips need. -/
-private theorem eMinus_append_bytes (pre post : String) :
-    (∀ i, i < pre.toUTF8.size → (pre ++ "e-" ++ post).toUTF8[i]! = pre.toUTF8[i]!) ∧
-    (pre ++ "e-" ++ post).toUTF8[pre.toUTF8.size]! = 101 ∧
-    (pre ++ "e-" ++ post).toUTF8[pre.toUTF8.size + 1]! = 45 ∧
-    (∀ i, i < post.toUTF8.size →
-      (pre ++ "e-" ++ post).toUTF8[pre.toUTF8.size + 2 + i]! = post.toUTF8[i]!) := by
+private
+theorem eMinus_append_bytes
+    (pre post : String)
+    : (∀ i, i < pre.toUTF8.size → (pre ++ "e-" ++ post).toUTF8[i]! = pre.toUTF8[i]!) ∧
+      (pre ++ "e-" ++ post).toUTF8[pre.toUTF8.size]! = 101 ∧
+      (pre ++ "e-" ++ post).toUTF8[pre.toUTF8.size + 1]! = 45 ∧
+      (∀ i, i < post.toUTF8.size →
+        (pre ++ "e-" ++ post).toUTF8[pre.toUTF8.size + 2 + i]! = post.toUTF8[i]!)
+    := by
   have hE : ("e-" : String).toUTF8.size = 2 := by decide
   refine ⟨?_, ?_, ?_, ?_⟩
   · intro i hi
@@ -1016,11 +1026,13 @@ theorem neg_prepend_bytes
 
 /-- Byte view of an `ip ++ "." ++ fp` string's UTF-8 encoding: the integer-part bytes, the `.`
 (46) at `|ip|`, then the fractional-part bytes. -/
-private theorem dot_append_bytes (ip fp : String) :
-    (∀ i, i < ip.toUTF8.size → (ip ++ "." ++ fp).toUTF8[i]! = ip.toUTF8[i]!) ∧
-    (ip ++ "." ++ fp).toUTF8[ip.toUTF8.size]! = 46 ∧
-    (∀ i, i < fp.toUTF8.size →
-      (ip ++ "." ++ fp).toUTF8[ip.toUTF8.size + 1 + i]! = fp.toUTF8[i]!) := by
+private
+theorem dot_append_bytes
+    (ip fp : String)
+    : (∀ i, i < ip.toUTF8.size → (ip ++ "." ++ fp).toUTF8[i]! = ip.toUTF8[i]!) ∧
+      (ip ++ "." ++ fp).toUTF8[ip.toUTF8.size]! = 46 ∧
+      (∀ i, i < fp.toUTF8.size → (ip ++ "." ++ fp).toUTF8[ip.toUTF8.size + 1 + i]! = fp.toUTF8[i]!)
+    := by
   have hD : ("." : String).toUTF8.size = 1 := by decide
   refine ⟨?_, ?_, ?_⟩
   · intro i hi

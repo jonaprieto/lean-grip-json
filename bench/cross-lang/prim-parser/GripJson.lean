@@ -33,8 +33,14 @@ open Graded
 -- Copied from bench/JCanada.lean — the canonical prim-parser sep-fold pattern.
 -- ---------------------------------------------------------------------------
 
-@[inline] def gsepFold {ρ γ β ge ge' α} (f : β → α → β) (acc : β)
-    (sep : G ρ ⟨ge', always⟩ γ) (p : G ρ ⟨ge, always⟩ α) :=
+@[inline]
+def gsepFold
+    {ρ γ β ge ge' α}
+    (f : β → α → β)
+    (acc : β)
+    (sep : G ρ ⟨ge', always⟩ γ)
+    (p : G ρ ⟨ge, always⟩ α)
+    :=
   G.alt (G.bind p (fun x => G.starFold f (f acc x) (G.seqR sep p))) (G.pure acc)
 
 -- ---------------------------------------------------------------------------
@@ -42,7 +48,9 @@ open Graded
 -- ρ = Nat because grecur (the single fixpoint) returns Nat (leaf count).
 -- ---------------------------------------------------------------------------
 
-def gJson : G Nat conditional Nat :=
+def gJson
+    : G Nat conditional Nat
+    :=
   -- Byte predicates (inlined for performance)
   let isDigit    : UInt8 → Bool := fun b => 48 ≤ b.toNat && b.toNat ≤ 57
   let isDigit19  : UInt8 → Bool := fun b => 49 ≤ b.toNat && b.toNat ≤ 57
@@ -201,7 +209,8 @@ def runJson
 def gripSampleMs
     (reps : Nat)
     (arr : ByteArray)
-    : IO (Float × Float) := do
+    : IO (Float × Float)
+    := do
   let sink ← IO.mkRef (0 : Nat)
   let mut samples : Array Nat := #[]
   for _ in [0:reps] do
@@ -223,7 +232,8 @@ def gripBasename
 
 def main
     (args : List String)
-    : IO Unit := do
+    : IO Unit
+    := do
   let pathStr : String := match args with
     | p :: _ => p
     | [] => "/Users/jonaprieto/research/lean-grip/bench/data/canada.json"
