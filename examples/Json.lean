@@ -37,33 +37,61 @@ open Grip
 @[inline] private def ws : GParser flexible Nat := GParser.ws
 
 /-- Exact keyword, dispatched by first byte; leaf count 1. -/
-@[inline] private def keywordTrue : GParser conditional Nat :=
+@[inline]
+private
+def keywordTrue
+    : GParser conditional Nat
+    :=
   (fun _ => 1) <$> GParser.string "true"
-@[inline] private def keywordFalse : GParser conditional Nat :=
+@[inline]
+private
+def keywordFalse
+    : GParser conditional Nat
+    :=
   (fun _ => 1) <$> GParser.string "false"
-@[inline] private def keywordNull : GParser conditional Nat :=
+@[inline]
+private
+def keywordNull
+    : GParser conditional Nat
+    :=
   (fun _ => 1) <$> GParser.string "null"
 
 /-- A `.frac` fragment: `.` then one or more digits. Fails hard if `.` is not
 followed by a digit (so `1.` is rejected). -/
-@[inline] private def frac : GParser conditional Nat :=
+@[inline]
+private
+def frac
+    : GParser conditional Nat
+    :=
   GParser.seqR (GParser.ch '.') (GParser.takeWhile1 Ascii.isDigit)
 
 /-- An exponent fragment: `[eE]` `[+-]?` digits. Fails hard if no digit follows. -/
-@[inline] private def expo : GParser conditional Nat :=
+@[inline]
+private
+def expo
+    : GParser conditional Nat
+    :=
   GParser.seqR (GParser.satisfy Ascii.isExp)
     (GParser.seqR (GParser.optional (GParser.satisfy Ascii.isSign))
       (GParser.takeWhile1 Ascii.isDigit))
 
 /-- The integer part: `0` alone, or `[1-9]` then more digits. -/
-@[inline] private def intPart : GParser conditional Unit :=
+@[inline]
+private
+def intPart
+    : GParser conditional Unit
+    :=
   GParser.alt (GParser.ch '0')
     (GParser.seqR (GParser.satisfy Ascii.isDigit19)
       (GParser.seqR (GParser.takeWhile Ascii.isDigit) (GParser.pure ())))
 
 /-- A JSON number: `-? int frac? exp?`; leaf count 1. Leading-zero (`01`) and a
 lone trailing token (`1 2`) are rejected by the top-level EOF check, not here. -/
-@[inline] private def number : GParser conditional Nat :=
+@[inline]
+private
+def number
+    : GParser conditional Nat
+    :=
   (fun _ => 1) <$>
     (GParser.seqR (GParser.optional (GParser.ch '-'))
       (GParser.seqL intPart
@@ -72,12 +100,19 @@ lone trailing token (`1 2`) are rejected by the top-level EOF check, not here. -
 /-- A validated JSON string literal `"..."`; leaf count 1. One strict single-pass scan
 (`GParser.stringLit`) validates escapes (incl. `\uXXXX`) and rejects unescaped control bytes,
 replacing the old per-byte `foldMany` over a string-char combinator. -/
-@[inline] private def jstring : GParser conditional Nat :=
+@[inline]
+private
+def jstring
+    : GParser conditional Nat
+    :=
   (fun _ => 1) <$> GParser.stringLit
 
 -- Recursive value via `fix` ---------------------------------------------
 
-private def value : GParser conditional Nat :=
+private
+def value
+    : GParser conditional Nat
+    :=
   GParser.fix fun value =>
     let commaValue : GParser conditional Nat :=
       GParser.seqR ws (GParser.seqR (GParser.ch ',') (GParser.seqR ws value))
@@ -119,7 +154,9 @@ private def value : GParser conditional Nat :=
 /-- Parse one complete JSON document: a value, then optional trailing whitespace,
 then end of input. Full consumption is enforced here (neither `run?` nor `parse`
 checks it), which is what rejects trailing garbage. -/
-def json : Parser Nat :=
+def json
+    : Parser Nat
+    :=
   GParser.weakenFallible (GParser.seqL value (GParser.seqR ws GParser.eof))
 
 -- Acceptance guards -------------------------------------------------------

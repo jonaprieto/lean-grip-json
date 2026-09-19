@@ -114,7 +114,9 @@ def Stats.summary
   s!"y: {s.yOk}/{s.yTot} accepted · n: {s.nOk}/{s.nTot} rejected \
     (allow-accept {nAllowAccept.length}) · i: {s.iAcc} accepted / {s.iRej} rejected"
 
-def batch : IO UInt32 := do
+def batch
+    : IO UInt32
+    := do
   let dir : System.FilePath := "test/jsontestsuite"
   let entries ← dir.readDir
   let mut validator : Stats := {}
@@ -157,7 +159,8 @@ def batch : IO UInt32 := do
 
 def main
     (args : List String)
-    : IO UInt32 := do
+    : IO UInt32
+    := do
   match args with
   | [file] =>
     let arr ← IO.FS.readBinFile file

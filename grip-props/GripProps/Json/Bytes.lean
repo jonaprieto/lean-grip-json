@@ -19,11 +19,15 @@ set_option maxHeartbeats 1000000
 namespace GripProps.Bytes
 
 /-- The internal `foldlM` loop, in `Id`, computes the `List.foldl` over the remaining bytes. -/
-theorem foldlM_loop_eq {β : Type} (f : β → UInt8 → β) (arr : ByteArray)
-    (h : arr.size ≤ arr.size) :
-    ∀ (i j : Nat) (b : β), j + i = arr.size →
+theorem foldlM_loop_eq
+    {β : Type}
+    (f : β → UInt8 → β)
+    (arr : ByteArray)
+    (h : arr.size ≤ arr.size)
+    : ∀ (i j : Nat) (b : β), j + i = arr.size →
       ByteArray.foldlM.loop (m := Id) (fun x y => pure (f x y)) arr arr.size h i j b
-        = (arr.data.toList.drop j).foldl f b := by
+        = (arr.data.toList.drop j).foldl f b
+    := by
   intro i
   induction i with
   | zero =>
@@ -63,11 +67,16 @@ theorem foldl_eq_data_toList
   exact foldlM_loop_eq f arr (Nat.le_refl _) arr.size 0 b (by omega)
 
 /-- The internal loop over a bounded range computes the `List.foldl` over that slice of bytes. -/
-theorem foldlM_loop_range {β : Type} (f : β → UInt8 → β) (arr : ByteArray) (stop : Nat)
-    (h : stop ≤ arr.size) :
-    ∀ (i j : Nat) (b : β), j + i = stop →
+theorem foldlM_loop_range
+    {β : Type}
+    (f : β → UInt8 → β)
+    (arr : ByteArray)
+    (stop : Nat)
+    (h : stop ≤ arr.size)
+    : ∀ (i j : Nat) (b : β), j + i = stop →
       ByteArray.foldlM.loop (m := Id) (fun x y => pure (f x y)) arr stop h i j b
-        = ((arr.data.toList.drop j).take i).foldl f b := by
+        = ((arr.data.toList.drop j).take i).foldl f b
+    := by
   intro i
   induction i with
   | zero =>

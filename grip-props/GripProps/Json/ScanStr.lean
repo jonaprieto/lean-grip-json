@@ -197,11 +197,17 @@ theorem passthrough_bytes_normal
 /-- At the closing quote, `scanStr` finishes: it builds the body `arr[q0+1 .. q)` and unescapes
 it exactly when an escape was seen -- given the body is valid UTF-8 (always true of a rendered
 body; `scanStr` rejects the string otherwise, see `Grip.Json.scanStr`). -/
-theorem scanStr_close (arr : ByteArray) (q0 q : Nat) (esc : Bool) (hq : q < arr.size)
-    (h34 : arr[q]! = 34) (hv : (arr.extract (q0 + 1) q).IsValidUTF8) :
-    scanStr arr q0 q esc =
+theorem scanStr_close
+    (arr : ByteArray)
+    (q0 q : Nat)
+    (esc : Bool)
+    (hq : q < arr.size)
+    (h34 : arr[q]! = 34)
+    (hv : (arr.extract (q0 + 1) q).IsValidUTF8)
+    : scanStr arr q0 q esc =
       .ok (if esc then unescape (String.fromUTF8! (arr.extract (q0 + 1) q))
-        else String.fromUTF8! (arr.extract (q0 + 1) q)) (q + 1) := by
+        else String.fromUTF8! (arr.extract (q0 + 1) q)) (q + 1)
+    := by
   rw [getElem!_pos arr q hq] at h34
   rw [scanStr]
   simp only [dif_pos hq, h34, beq_self_eq_true, if_true, fromUTF8?_of_isValidUTF8 hv]
@@ -470,11 +476,15 @@ theorem getElem!_append_right
 /-- **One character of a rendered body.** `scanStr` walks a single character's `cbytes`, advancing
 by their length and setting the escape flag iff the character was escaped. Unifies the passthrough
 and escape steps. -/
-theorem scanStr_char_step (arr : ByteArray) (q0 q : Nat) (esc : Bool) (c : Char)
+theorem scanStr_char_step
+    (arr : ByteArray)
+    (q0 q : Nat)
+    (esc : Bool)
+    (c : Char)
     (hcontent : ∀ j, j < (cbytes c).length → arr[q + j]! = (cbytes c)[j]!)
-    (hbound : q + (cbytes c).length ≤ arr.size) :
-    scanStr arr q0 q esc =
-      scanStr arr q0 (q + (cbytes c).length) (esc || !(escapeChar c == [c])) := by
+    (hbound : q + (cbytes c).length ≤ arr.size)
+    : scanStr arr q0 q esc = scanStr arr q0 (q + (cbytes c).length) (esc || !(escapeChar c == [c]))
+    := by
   by_cases hp : escapeChar c = [c]
   · have hbeq : (escapeChar c == [c]) = true := by rw [hp]; exact beq_self_eq_true _
     rw [hbeq]; simp only [Bool.not_true, Bool.or_false]
@@ -494,8 +504,11 @@ theorem scanStr_char_step (arr : ByteArray) (q0 q : Nat) (esc : Bool) (c : Char)
 characters `cs`), followed by the closing quote, `scanStr` returns the decoded string: it decodes
 the whole body and unescapes exactly when some character was escaped. Proved by induction on `cs`
 via `scanStr_char_step`. -/
-theorem scanStr_walk (arr : ByteArray) (q0 : Nat) (body : String) :
-    ∀ (cs : List Char) (q : Nat) (esc : Bool),
+theorem scanStr_walk
+    (arr : ByteArray)
+    (q0 : Nat)
+    (body : String)
+    : ∀ (cs : List Char) (q : Nat) (esc : Bool),
       (∀ j, j < (ebytes cs).length → arr[q + j]! = (ebytes cs)[j]!) →
       arr[q + (ebytes cs).length]! = 34 →
       q + (ebytes cs).length < arr.size →
@@ -503,7 +516,8 @@ theorem scanStr_walk (arr : ByteArray) (q0 : Nat) (body : String) :
       (arr.extract (q0 + 1) (q + (ebytes cs).length)).IsValidUTF8 →
       scanStr arr q0 q esc =
         .ok (if (esc || cs.any (fun c => !(escapeChar c == [c]))) then unescape body else body)
-          (q + (ebytes cs).length + 1) := by
+          (q + (ebytes cs).length + 1)
+    := by
   intro cs
   induction cs with
   | nil =>

@@ -72,9 +72,15 @@ theorem foldl_escapeChar
 
 /-- The core invariant: folding the per-character escape-decode over `cs`, from a clean state,
 appends exactly `cs` to the output (tracked through `String.toList`). -/
-theorem out_toList_foldl (cs : List Char) (st : UState)
-    (he : st.esc = false) (hu : st.uLeft = 0) (hh : st.hi = 0) (ha : st.uAcc = 0) :
-    (cs.foldl (fun st c => (escapeChar c).foldl uStep st) st).out.toList = st.out.toList ++ cs := by
+theorem out_toList_foldl
+    (cs : List Char)
+    (st : UState)
+    (he : st.esc = false)
+    (hu : st.uLeft = 0)
+    (hh : st.hi = 0)
+    (ha : st.uAcc = 0)
+    : (cs.foldl (fun st c => (escapeChar c).foldl uStep st) st).out.toList = st.out.toList ++ cs
+    := by
   induction cs generalizing st with
   | nil => simp
   | cons c cs ih =>

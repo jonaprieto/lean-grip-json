@@ -153,7 +153,12 @@ structure NState where
 /-- One step of the number decode, over a raw input byte. A `-` (45) is the mantissa sign
 in phase 0 and the exponent sign in phase 2; `+` (43) only occurs in the exponent. Digit
 bytes are `48..57`. -/
-@[inline] def numByte (st : NState) (b : UInt8) : NState :=
+@[inline]
+def numByte
+    (st : NState)
+    (b : UInt8)
+    : NState
+    :=
   if b == 46 then { st with phase := 1 }                    -- '.'
   else if b == 101 || b == 69 then { st with phase := 2 }   -- 'e' / 'E'
   else if b == 43 then st                                   -- '+'
@@ -181,7 +186,12 @@ otherwise fold into an unbounded `10 ^ n` and panic). A nonnegative base-10 expo
 into the mantissa (so `2e3` is `num 2000 0`), keeping `exponent : Nat`; a negative one becomes
 the exponent (`2.5` is `num 25 1`). Folds `numByte` over the input bytes directly — no `capture`
 `String`, no per-char UTF-8 decode. -/
-@[inline] def decodeNumberBytes? (arr : ByteArray) (start stop : Nat) : Option Json :=
+@[inline]
+def decodeNumberBytes?
+    (arr : ByteArray)
+    (start stop : Nat)
+    : Option Json
+    :=
   let st := arr.foldl numByte {} start stop
   let mant : Int := if st.mantNeg then -(st.mant : Int) else st.mant
   let decExp : Int := (if st.expNeg then -(st.expVal : Int) else (st.expVal : Int)) - st.fracLen
@@ -199,7 +209,12 @@ open Decode
 /-- The offset just past a valid `\`-escape whose backslash is at `q` (`arr[q] == 92`), or
 `none` for a malformed one: a simple escape (`\" \\ \/ \b \f \n \r \t`) advances 2, a
 `\uXXXX` advances 6. Isolated from `scanStr` so the scan loop stays flat. -/
-@[inline] def escEnd (arr : ByteArray) (q : Nat) : Option Nat :=
+@[inline]
+def escEnd
+    (arr : ByteArray)
+    (q : Nat)
+    : Option Nat
+    :=
   if h1 : q + 1 < arr.size then
     if arr[q + 1] == 34 || arr[q + 1] == 92 || arr[q + 1] == 47 || arr[q + 1] == 98
         || arr[q + 1] == 102 || arr[q + 1] == 110 || arr[q + 1] == 114 || arr[q + 1] == 116 then
@@ -240,7 +255,13 @@ one pass (`String.fromUTF8?`, no separate validation walk) and unescaped only wh
 invalid UTF-8 in the body is rejected rather than silently decoded to an empty string. No
 second backslash pass and no intermediate `capture`/escape-flag allocation. Escapes are
 validated by `escEnd`, keeping this loop flat. Total (structural on `arr.size - q`). -/
-@[specialize] def scanStr (arr : ByteArray) (q0 q : Nat) (esc : Bool) : ParseResult String :=
+@[specialize]
+def scanStr
+    (arr : ByteArray)
+    (q0 q : Nat)
+    (esc : Bool)
+    : ParseResult String
+    :=
   if h : q < arr.size then
     if arr[q] == 34 then
       match String.fromUTF8? (arr.extract (q0 + 1) q) with
@@ -397,17 +418,26 @@ decreasing_by
 -- Leaf value parsers -----------------------------------------------------
 
 /-- Fractional part: a `.` then one or more digits. -/
-@[inline] def frac : GParser conditional Nat :=
+@[inline]
+def frac
+    : GParser conditional Nat
+    :=
   GParser.seqR (GParser.ch '.') (GParser.takeWhile1 Ascii.isDigit)
 
 /-- Exponent part: `e`/`E`, an optional sign, then one or more digits. -/
-@[inline] def expo : GParser conditional Nat :=
+@[inline]
+def expo
+    : GParser conditional Nat
+    :=
   GParser.seqR (GParser.satisfy Ascii.isExp)
     (GParser.seqR (GParser.optional (GParser.satisfy Ascii.isSign))
       (GParser.takeWhile1 Ascii.isDigit))
 
 /-- Integer part: a lone `0`, or a nonzero digit followed by any digits (no leading zeros). -/
-@[inline] def intPart : GParser conditional Unit :=
+@[inline]
+def intPart
+    : GParser conditional Unit
+    :=
   GParser.alt (GParser.ch '0')
     (GParser.seqR (GParser.satisfy Ascii.isDigit19)
       (GParser.seqR (GParser.takeWhile Ascii.isDigit) (GParser.pure ())))
@@ -415,7 +445,10 @@ decreasing_by
 /-- A JSON number, decoded to `.num` straight from the consumed byte range (no `capture`
 `String`). Leading-zero and trailing-garbage rejection come from the grammar and the
 top-level EOF check. -/
-@[inline] def number : GParser conditional Json :=
+@[inline]
+def number
+    : GParser conditional Json
+    :=
   GParser.captureWith? decodeNumberBytes?
     (GParser.seqR (GParser.optional (GParser.ch '-'))
       (GParser.seqL intPart
@@ -424,7 +457,10 @@ top-level EOF check. -/
 /-- A validated JSON string literal decoded to its `String` contents in a single scan. The
 escape-aware body scan reports whether any `\` occurred, so `unescape` runs only when it
 must and there is no separate backslash pass over the body. -/
-@[inline] def jstr : GParser conditional String where
+@[inline]
+def jstr
+    : GParser conditional String
+    where
   run := fun arr q =>
     if h : q < arr.size then
       (if arr[q] == 34 then scanStr arr q (q + 1) false else .error ⟨q, ["a string"]⟩)
@@ -461,13 +497,22 @@ must and there is no separate backslash pass over the body. -/
 /-- A JSON string literal as a `Json.str` value. -/
 @[inline] def jstring : GParser conditional Json := GParser.map Json.str jstr
 /-- The keyword `null` as a `Json` value. -/
-@[inline] def jnull  : GParser conditional Json :=
+@[inline]
+def jnull
+    : GParser conditional Json
+    :=
   GParser.map (fun _ => Json.null) (GParser.string "null") <?> "null"
 /-- The keyword `true` as a `Json` value. -/
-@[inline] def jtrue  : GParser conditional Json :=
+@[inline]
+def jtrue
+    : GParser conditional Json
+    :=
   GParser.map (fun _ => Json.bool true) (GParser.string "true") <?> "true"
 /-- The keyword `false` as a `Json` value. -/
-@[inline] def jfalse : GParser conditional Json :=
+@[inline]
+def jfalse
+    : GParser conditional Json
+    :=
   GParser.map (fun _ => Json.bool false) (GParser.string "false") <?> "false"
 
 -- Recursive value via `fix` ----------------------------------------------
@@ -476,8 +521,11 @@ must and there is no separate backslash pass over the body. -/
 `seqR ws (dispatch …)` this avoids allocating (and discarding) `ws`'s byte count and the
 extra combinator indirection on every value entry. Grade `conditional`: the dispatched
 parser consumes, and whitespace only advances the offset further. -/
-@[inline] def wsDispatch (select : UInt8 → GParser conditional Json) :
-    GParser conditional Json where
+@[inline]
+def wsDispatch
+    (select : UInt8 → GParser conditional Json)
+    : GParser conditional Json
+    where
   run := fun arr q =>
     let p := scanFwd arr Ascii.isWs q
     if _ : p < arr.size then (select arr[p]).run arr p else .error ⟨p, ["a JSON value"]⟩
@@ -513,7 +561,12 @@ parser consumes, and whitespace only advances the offset further. -/
 /-- Skip leading whitespace, then match the single byte `b`, consuming it. Fused so a
 structural token after whitespace costs one scan and one compare with no discarded `ws` count
 allocation. `name` is the expected-label reported when the byte is not there. -/
-@[inline] def wsByte (b : UInt8) (name : String) : GParser conditional Unit where
+@[inline]
+def wsByte
+    (b : UInt8)
+    (name : String)
+    : GParser conditional Unit
+    where
   run := fun arr q =>
     let p := scanFwd arr Ascii.isWs q
     if _ : p < arr.size then
@@ -574,9 +627,19 @@ position the position of the real problem:
 Total: structural on `arr.size - q`, using `elem`'s `cwit` (it always consumes) to strictly
 advance. The `q < q' ∧ q' ≤ arr.size` guard is never false for a graded `elem`, but stating it
 here is what makes the measure decrease without a bounds hypothesis on the caller. -/
-@[specialize] def bodyFwd {α β : Type} (push : β → α → β) (elem : GParser conditional α)
-    (close : UInt8) (closeName : String) (arr : ByteArray) (acc : β) (first : Bool) (q : Nat) :
-    ParseResult β :=
+@[specialize]
+def bodyFwd
+    {α β : Type}
+    (push : β → α → β)
+    (elem : GParser conditional α)
+    (close : UInt8)
+    (closeName : String)
+    (arr : ByteArray)
+    (acc : β)
+    (first : Bool)
+    (q : Nat)
+    : ParseResult β
+    :=
   if first then
     match elem.run arr q with
     | .ok x q' =>
@@ -793,8 +856,16 @@ decreasing_by
 with `push`. Consumes the closing byte, so it is `conditional` (always consumes on success).
 Fusing the separator loop and the terminator into one parser is what lets a failure inside an
 element reach the caller instead of being turned into "expected `]`" at the separator. -/
-@[inline] def containerBody {α β : Type} (push : β → α → β) (elem : GParser conditional α)
-    (close : UInt8) (closeName : String) (acc : β) : GParser conditional β where
+@[inline]
+def containerBody
+    {α β : Type}
+    (push : β → α → β)
+    (elem : GParser conditional α)
+    (close : UInt8)
+    (closeName : String)
+    (acc : β)
+    : GParser conditional β
+    where
   run := fun arr q => bodyFwd push elem close closeName arr acc true q
   cwit := by
     intro arr q b q' h; exact bodyFwd_gt push elem close closeName arr acc true q b q' h
