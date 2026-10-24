@@ -577,14 +577,21 @@ theorem value_run_number
 
 /-- `value` parses a nonnegative integer number (`e = 0`). The `hstop` byte after the number is a
 delimiter (not a digit, `.`, or `e`), so the optional fraction/exponent parsers correctly fail. -/
-theorem value_run_num_int (arr : ByteArray) (q : Nat) (m : Int) (_hm : 0 ≤ m) (n : Nat)
-    (hn : 1 ≤ n) (hsize : q + n ≤ arr.size)
+theorem value_run_num_int
+    (arr : ByteArray)
+    (q : Nat)
+    (m : Int)
+    (_hm : 0 ≤ m)
+    (n : Nat)
+    (hn : 1 ≤ n)
+    (hsize : q + n ≤ arr.size)
     (hstruct : (n = 1 ∧ arr[q]! = 48) ∨
       (Ascii.isDigit19 arr[q]! = true ∧ ∀ i, 1 ≤ i → i < n → Ascii.isDigit arr[q + i]! = true))
     (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ Ascii.isDigit arr[q + n]! = false ∧
       arr[q + n]! ≠ 46 ∧ Ascii.isExp arr[q + n]! = false))
-    (hdecode : decodeNumberBytes? arr q (q + n) = some (Json.num m 0)) :
-    value.run arr q = .ok (Json.num m 0) (q + n) := by
+    (hdecode : decodeNumberBytes? arr q (q + n) = some (Json.num m 0))
+    : value.run arr q = .ok (Json.num m 0) (q + n)
+    := by
   have hqs : q < arr.size := by omega
   have hd! : Ascii.isDigit arr[q]! = true := by
     rcases hstruct with ⟨_, h0⟩ | ⟨h19, _⟩
@@ -625,16 +632,24 @@ theorem value_run_num_int (arr : ByteArray) (q : Nat) (m : Int) (_hm : 0 ≤ m) 
 
 /-- `value` parses a nonnegative fractional number (`e > 0`): integer part of length `ip`, `.`,
 then a nonempty fractional part, total length `n`. -/
-theorem value_run_num_frac (arr : ByteArray) (q : Nat) (m : Int) (e ip n : Nat) (_hm : 0 ≤ m)
-    (hip : 1 ≤ ip) (hn : ip + 2 ≤ n) (hsize : q + n ≤ arr.size)
+theorem value_run_num_frac
+    (arr : ByteArray)
+    (q : Nat)
+    (m : Int)
+    (e ip n : Nat)
+    (_hm : 0 ≤ m)
+    (hip : 1 ≤ ip)
+    (hn : ip + 2 ≤ n)
+    (hsize : q + n ≤ arr.size)
     (hintstruct : (ip = 1 ∧ arr[q]! = 48) ∨
       (Ascii.isDigit19 arr[q]! = true ∧ ∀ i, 1 ≤ i → i < ip → Ascii.isDigit arr[q + i]! = true))
     (hdot : arr[q + ip]! = 46)
     (hfrac : ∀ i, ip + 1 ≤ i → i < n → Ascii.isDigit arr[q + i]! = true)
     (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ Ascii.isDigit arr[q + n]! = false ∧
       arr[q + n]! ≠ 46 ∧ Ascii.isExp arr[q + n]! = false))
-    (hdecode : decodeNumberBytes? arr q (q + n) = some (Json.num m e)) :
-    value.run arr q = .ok (Json.num m e) (q + n) := by
+    (hdecode : decodeNumberBytes? arr q (q + n) = some (Json.num m e))
+    : value.run arr q = .ok (Json.num m e) (q + n)
+    := by
   have hqs : q < arr.size := by omega
   have hd! : Ascii.isDigit arr[q]! = true := by
     rcases hintstruct with ⟨_, h0⟩ | ⟨h19, _⟩
@@ -679,16 +694,24 @@ theorem value_run_num_frac (arr : ByteArray) (q : Nat) (m : Int) (e ip n : Nat) 
 
 /-- `value` parses a negative integer (`m < 0`, `e = 0`): a `-` sign then an integer part of
 length `ip`. Dispatch routes `-` to `number` via the `dash` branch. -/
-theorem value_run_num_int_neg (arr : ByteArray) (q : Nat) (m : Int) (_hm : m < 0) (ip : Nat)
-    (hip : 1 ≤ ip) (hsize : q + 1 + ip ≤ arr.size) (hdash : arr[q]! = 45)
+theorem value_run_num_int_neg
+    (arr : ByteArray)
+    (q : Nat)
+    (m : Int)
+    (_hm : m < 0)
+    (ip : Nat)
+    (hip : 1 ≤ ip)
+    (hsize : q + 1 + ip ≤ arr.size)
+    (hdash : arr[q]! = 45)
     (hstruct : (ip = 1 ∧ arr[q + 1]! = 48) ∨
       (Ascii.isDigit19 arr[q + 1]! = true ∧
         ∀ i, 1 ≤ i → i < ip → Ascii.isDigit arr[q + 1 + i]! = true))
     (hstop : q + 1 + ip = arr.size ∨ (q + 1 + ip < arr.size ∧
       Ascii.isDigit arr[q + 1 + ip]! = false ∧ arr[q + 1 + ip]! ≠ 46 ∧
       Ascii.isExp arr[q + 1 + ip]! = false))
-    (hdecode : decodeNumberBytes? arr q (q + 1 + ip) = some (Json.num m 0)) :
-    value.run arr q = .ok (Json.num m 0) (q + 1 + ip) := by
+    (hdecode : decodeNumberBytes? arr q (q + 1 + ip) = some (Json.num m 0))
+    : value.run arr q = .ok (Json.num m 0) (q + 1 + ip)
+    := by
   have hqs : q < arr.size := by omega
   have hq1 : q + 1 < arr.size := by omega
   have hb : arr[q] = 45 := by rw [getElem!_pos arr q hqs] at hdash; exact hdash
@@ -726,8 +749,16 @@ theorem value_run_num_int_neg (arr : ByteArray) (q : Nat) (m : Int) (_hm : m < 0
 
 /-- `value` parses a negative fractional number (`m < 0`, `e > 0`): `-`, integer part of length
 `ip`, `.`, then a nonempty fractional part, total length `n`. -/
-theorem value_run_num_frac_neg (arr : ByteArray) (q : Nat) (m : Int) (e ip n : Nat) (_hm : m < 0)
-    (hip : 1 ≤ ip) (hn : ip + 3 ≤ n) (hsize : q + n ≤ arr.size) (hdash : arr[q]! = 45)
+theorem value_run_num_frac_neg
+    (arr : ByteArray)
+    (q : Nat)
+    (m : Int)
+    (e ip n : Nat)
+    (_hm : m < 0)
+    (hip : 1 ≤ ip)
+    (hn : ip + 3 ≤ n)
+    (hsize : q + n ≤ arr.size)
+    (hdash : arr[q]! = 45)
     (hintstruct : (ip = 1 ∧ arr[q + 1]! = 48) ∨
       (Ascii.isDigit19 arr[q + 1]! = true ∧
         ∀ i, 1 ≤ i → i < ip → Ascii.isDigit arr[q + 1 + i]! = true))
@@ -735,8 +766,9 @@ theorem value_run_num_frac_neg (arr : ByteArray) (q : Nat) (m : Int) (e ip n : N
     (hfrac : ∀ i, ip + 2 ≤ i → i < n → Ascii.isDigit arr[q + i]! = true)
     (hstop : q + n = arr.size ∨ (q + n < arr.size ∧ Ascii.isDigit arr[q + n]! = false ∧
       arr[q + n]! ≠ 46 ∧ Ascii.isExp arr[q + n]! = false))
-    (hdecode : decodeNumberBytes? arr q (q + n) = some (Json.num m e)) :
-    value.run arr q = .ok (Json.num m e) (q + n) := by
+    (hdecode : decodeNumberBytes? arr q (q + n) = some (Json.num m e))
+    : value.run arr q = .ok (Json.num m e) (q + n)
+    := by
   have hqs : q < arr.size := by omega
   have hq1 : q + 1 < arr.size := by omega
   have hb : arr[q] = 45 := by rw [getElem!_pos arr q hqs] at hdash; exact hdash
@@ -950,13 +982,20 @@ theorem renderNumScientific_append
 
 /-- The `expo` parser consumes a `e-<digits>` exponent: marker, mandatory `-` sign, then `ep`
 digits, ending at a non-digit or end of input. -/
-private theorem expo_run_scientific (arr : ByteArray) (q ep : Nat)
-    (hq : q < arr.size) (hexp : Ascii.isExp arr[q]! = true)
-    (hsign : arr[q + 1]! = 45) (hq1 : q + 1 < arr.size) (hep : 1 ≤ ep)
+private
+theorem expo_run_scientific
+    (arr : ByteArray)
+    (q ep : Nat)
+    (hq : q < arr.size)
+    (hexp : Ascii.isExp arr[q]! = true)
+    (hsign : arr[q + 1]! = 45)
+    (hq1 : q + 1 < arr.size)
+    (hep : 1 ≤ ep)
     (hdigits : ∀ i, i < ep → Ascii.isDigit arr[q + 2 + i]! = true)
     (hstop : q + 2 + ep = arr.size ∨
-      (q + 2 + ep < arr.size ∧ Ascii.isDigit arr[q + 2 + ep]! = false)) :
-    expo.run arr q = .ok ep (q + 2 + ep) := by
+      (q + 2 + ep < arr.size ∧ Ascii.isDigit arr[q + 2 + ep]! = false))
+    : expo.run arr q = .ok ep (q + 2 + ep)
+    := by
   have he : (GParser.satisfy Ascii.isExp).run arr q = .ok arr[q]! (q + 1) :=
     satisfy_run! _ arr q hq hexp
   have hs : (GParser.optional (GParser.satisfy Ascii.isSign)).run arr (q + 1) =
@@ -1071,7 +1110,11 @@ theorem isDigit_byte_of_mem
 
 /-- `value` parses any occurrence of the scientific rendering `renderNumScientific m e` (used
 for fractional exponents above `maxExp`) at offset `q`, consuming exactly the rendering. -/
-theorem value_run_num_scientific (m : Int) (e : Nat) (buf : ByteArray) (q : Nat)
+theorem value_run_num_scientific
+    (m : Int)
+    (e : Nat)
+    (buf : ByteArray)
+    (q : Nat)
     (he : maxExp < e)
     (hq : q + (renderNumScientific m e).toUTF8.size ≤ buf.size)
     (hmatch : ∀ i, i < (renderNumScientific m e).toUTF8.size →
@@ -1080,8 +1123,9 @@ theorem value_run_num_scientific (m : Int) (e : Nat) (buf : ByteArray) (q : Nat)
       q + (renderNumScientific m e).toUTF8.size < buf.size ∧
         Ascii.isDigit buf[q + (renderNumScientific m e).toUTF8.size]! = false ∧
         buf[q + (renderNumScientific m e).toUTF8.size]! ≠ 46 ∧
-        Ascii.isExp buf[q + (renderNumScientific m e).toUTF8.size]! = false) :
-    value.run buf q = .ok (Json.num m e) (q + (renderNumScientific m e).toUTF8.size) := by
+        Ascii.isExp buf[q + (renderNumScientific m e).toUTF8.size]! = false)
+    : value.run buf q = .ok (Json.num m e) (q + (renderNumScientific m e).toUTF8.size)
+    := by
   have he_pos : 0 < e := by omega
   have hep_size : (toString e).toUTF8.size = (Nat.toDigits 10 e).length := by
     show (Nat.repr e).toUTF8.size = _
@@ -1400,15 +1444,20 @@ theorem value_run_num_scientific (m : Int) (e : Nat) (buf : ByteArray) (q : Nat)
 /-- `value` parses any occurrence of the expanded decimal rendering `renderNum m e` at offset
 `q`: dispatch and the number grammar consume exactly the rendering. The `hstop` byte after it
 must be a delimiter (not a digit, `.`, or `e`) so the optional fraction/exponent parsers fail. -/
-theorem value_run_num_at (m : Int) (e : Nat) (buf : ByteArray) (q : Nat)
+theorem value_run_num_at
+    (m : Int)
+    (e : Nat)
+    (buf : ByteArray)
+    (q : Nat)
     (hq : q + (renderNum m e).toUTF8.size ≤ buf.size)
     (hmatch : ∀ i, i < (renderNum m e).toUTF8.size → buf[q + i]! = (renderNum m e).toUTF8[i]!)
     (hstop : q + (renderNum m e).toUTF8.size = buf.size ∨
-             q + (renderNum m e).toUTF8.size < buf.size ∧
-               Ascii.isDigit buf[q + (renderNum m e).toUTF8.size]! = false ∧
-               buf[q + (renderNum m e).toUTF8.size]! ≠ 46 ∧
-               Ascii.isExp buf[q + (renderNum m e).toUTF8.size]! = false) :
-    Grip.Json.value.run buf q = .ok (Json.num m e) (q + (renderNum m e).toUTF8.size) := by
+      q + (renderNum m e).toUTF8.size < buf.size ∧
+        Ascii.isDigit buf[q + (renderNum m e).toUTF8.size]! = false ∧
+        buf[q + (renderNum m e).toUTF8.size]! ≠ 46 ∧
+        Ascii.isExp buf[q + (renderNum m e).toUTF8.size]! = false)
+    : Grip.Json.value.run buf q = .ok (Json.num m e) (q + (renderNum m e).toUTF8.size)
+    := by
   by_cases he : e = 0
   · subst he
     by_cases hm : 0 ≤ m

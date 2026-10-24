@@ -164,15 +164,19 @@ theorem foldl_H_zeros
 /-- The `numByte` fold over an integer part, the point, and a fractional part yields the mantissa
 of all digits together (starting from `st`) and a fractional length equal to the fractional part;
 other `NState` fields (e.g. the sign) are preserved. -/
-theorem fold_frac_chars (intg fracg : List Char) (st : NState) (hp : st.phase = 0)
+theorem fold_frac_chars
+    (intg fracg : List Char)
+    (st : NState)
+    (hp : st.phase = 0)
     (hi : ∀ c ∈ intg, 48 ≤ c.toNat ∧ c.toNat ≤ 57)
-    (hf : ∀ c ∈ fracg, 48 ≤ c.toNat ∧ c.toNat ≤ 57) :
-    (intg.flatMap String.utf8EncodeChar ++ String.utf8EncodeChar '.'
-        ++ fracg.flatMap String.utf8EncodeChar).foldl numByte st
-      = { st with
-          mant := (intg ++ fracg).foldl (fun a c => a * 10 + (c.toNat - 48)) st.mant
-          fracLen := st.fracLen + fracg.length
-          phase := 1 } := by
+    (hf : ∀ c ∈ fracg, 48 ≤ c.toNat ∧ c.toNat ≤ 57)
+    : (intg.flatMap String.utf8EncodeChar ++ String.utf8EncodeChar '.'
+          ++ fracg.flatMap String.utf8EncodeChar).foldl numByte st
+        = { st with
+            mant := (intg ++ fracg).foldl (fun a c => a * 10 + (c.toNat - 48)) st.mant
+            fracLen := st.fracLen + fracg.length
+            phase := 1 }
+    := by
   rw [List.append_assoc, List.foldl_append, foldl_numByte_ascii _ _ hp hi,
     ascii_encode '.' (by decide), List.foldl_append, List.foldl_cons, List.foldl_nil,
     numByte_dot, foldl_numByte_frac_ascii _ _ rfl hf]
@@ -461,20 +465,30 @@ theorem decode_at
 
 /-- Decoding a number that matches `renderNum m e` at offset `q` recovers `num m e`, given the
 whole-array decode result. -/
-theorem decode_renderNum_at (arr : ByteArray) (q : Nat) (m : Int) (e : Nat)
+theorem decode_renderNum_at
+    (arr : ByteArray)
+    (q : Nat)
+    (m : Int)
+    (e : Nat)
     (hsize : q + (renderNum m e).toUTF8.size ≤ arr.size)
     (hm : ∀ j, j < (renderNum m e).toUTF8.size → arr[q + j]! = (renderNum m e).toUTF8[j]!)
     (hd : decodeNumberBytes? (renderNum m e).toUTF8 0 (renderNum m e).toUTF8.size
-      = some (Json.num m e)) :
-    decodeNumberBytes? arr q (q + (renderNum m e).toUTF8.size) = some (Json.num m e) :=
+      = some (Json.num m e))
+    : decodeNumberBytes? arr q (q + (renderNum m e).toUTF8.size) = some (Json.num m e)
+    :=
   decode_at _ _ arr q hsize hm hd
 
 /-- Lift the scientific-notation decoder lemma through an arbitrary matching byte slice. -/
-theorem decode_renderNumScientific_at (arr : ByteArray) (q : Nat) (m : Int) (e : Nat)
+theorem decode_renderNumScientific_at
+    (arr : ByteArray)
+    (q : Nat)
+    (m : Int)
+    (e : Nat)
     (hsize : q + (renderNumScientific m e).toUTF8.size ≤ arr.size)
     (hm : ∀ j, j < (renderNumScientific m e).toUTF8.size →
       arr[q + j]! = (renderNumScientific m e).toUTF8[j]!)
     (hd : decodeNumberBytes? (renderNumScientific m e).toUTF8 0
-      (renderNumScientific m e).toUTF8.size = some (Json.num m e)) :
-    decodeNumberBytes? arr q (q + (renderNumScientific m e).toUTF8.size) = some (Json.num m e) :=
+      (renderNumScientific m e).toUTF8.size = some (Json.num m e))
+    : decodeNumberBytes? arr q (q + (renderNumScientific m e).toUTF8.size) = some (Json.num m e)
+    :=
   decode_at _ _ arr q hsize hm hd

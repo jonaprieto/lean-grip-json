@@ -71,16 +71,21 @@ theorem pair_agree
           exact AgreeOk.refl _
 
 -- Helper: seqR ws (pair si) at r ≥ pos > q agrees
-private theorem seqR_ws_pair_agree (s1 s2 : GParser conditional Json)
-    (arr : ByteArray) (q r : Nat) (hr : q < r)
-    (hpre : ∀ q', q < q' → AgreeOk (s1.run arr q') (s2.run arr q')) :
-    AgreeOk
-      ((GParser.seqR GParser.ws
-          (GParser.map2 (fun k v => (k, v)) Grip.Json.jstr
-            (GParser.seqR (Grip.Json.wsByte Ascii.colon "':'") s1))).run arr r)
-      ((GParser.seqR GParser.ws
-          (GParser.map2 (fun k v => (k, v)) Grip.Json.jstr
-            (GParser.seqR (Grip.Json.wsByte Ascii.colon "':'") s2))).run arr r) := by
+private
+theorem seqR_ws_pair_agree
+    (s1 s2 : GParser conditional Json)
+    (arr : ByteArray)
+    (q r : Nat)
+    (hr : q < r)
+    (hpre : ∀ q', q < q' → AgreeOk (s1.run arr q') (s2.run arr q'))
+    : AgreeOk
+        ((GParser.seqR GParser.ws
+            (GParser.map2 (fun k v => (k, v)) Grip.Json.jstr
+              (GParser.seqR (Grip.Json.wsByte Ascii.colon "':'") s1))).run arr r)
+        ((GParser.seqR GParser.ws
+            (GParser.map2 (fun k v => (k, v)) Grip.Json.jstr
+              (GParser.seqR (Grip.Json.wsByte Ascii.colon "':'") s2))).run arr r)
+    := by
   simp only [GParser.seqR_run]
   cases hws : GParser.ws.run arr r with
   | error _ => exact AgreeOk.refl _
@@ -606,25 +611,30 @@ theorem joinWith_map_renderKV_eq
 /-- The committed tail loop over a comma-prefixed key/value list, exiting on the closing `}`
 and consuming it. The element parser is `ws` then the pair parser, since a key literal (unlike
 a value) does not skip its own leading whitespace. -/
-private theorem bodyFwd_comma_kv_run
+private
+theorem bodyFwd_comma_kv_run
     (kv_parser : GParser conditional (String × Json))
-    (lst : List (String × Json)) (buf : ByteArray) (acc : Array (String × Json)) (base : Nat)
+    (lst : List (String × Json))
+    (buf : ByteArray)
+    (acc : Array (String × Json))
+    (base : Nat)
     (h_bound : base + (commaPrefixKV lst).toUTF8.size < buf.size)
     (h_match : ∀ j, j < (commaPrefixKV lst).toUTF8.size →
-        buf[base + j]! = (commaPrefixKV lst).toUTF8[j]!)
+      buf[base + j]! = (commaPrefixKV lst).toUTF8[j]!)
     (h_close : buf[base + (commaPrefixKV lst).toUTF8.size]! = 125)
     (h_kvp : ∀ kv ∈ lst, ∀ (p : Nat),
-        p + (renderKV kv).toUTF8.size ≤ buf.size →
-        (∀ j, j < (renderKV kv).toUTF8.size → buf[p + j]! = (renderKV kv).toUTF8[j]!) →
-        (p + (renderKV kv).toUTF8.size = buf.size ∨
-         (p + (renderKV kv).toUTF8.size < buf.size ∧
-          Ascii.isDigit buf[p + (renderKV kv).toUTF8.size]! = false ∧
-          buf[p + (renderKV kv).toUTF8.size]! ≠ 46 ∧
-          Ascii.isExp buf[p + (renderKV kv).toUTF8.size]! = false)) →
-        kv_parser.run buf p = .ok kv (p + (renderKV kv).toUTF8.size)) :
-    Grip.Json.bodyFwd (fun (a : Array (String × Json)) x => a.push x)
-        (GParser.seqR GParser.ws kv_parser) Ascii.rbrace "'}'" buf acc false base =
-      .ok (acc ++ lst.toArray) (base + (commaPrefixKV lst).toUTF8.size + 1) := by
+      p + (renderKV kv).toUTF8.size ≤ buf.size →
+      (∀ j, j < (renderKV kv).toUTF8.size → buf[p + j]! = (renderKV kv).toUTF8[j]!) →
+      (p + (renderKV kv).toUTF8.size = buf.size ∨
+       (p + (renderKV kv).toUTF8.size < buf.size ∧
+        Ascii.isDigit buf[p + (renderKV kv).toUTF8.size]! = false ∧
+        buf[p + (renderKV kv).toUTF8.size]! ≠ 46 ∧
+        Ascii.isExp buf[p + (renderKV kv).toUTF8.size]! = false)) →
+      kv_parser.run buf p = .ok kv (p + (renderKV kv).toUTF8.size))
+    : Grip.Json.bodyFwd (fun (a : Array (String × Json)) x => a.push x)
+          (GParser.seqR GParser.ws kv_parser) Ascii.rbrace "'}'" buf acc false base =
+        .ok (acc ++ lst.toArray) (base + (commaPrefixKV lst).toUTF8.size + 1)
+    := by
   induction lst generalizing base acc with
   | nil =>
     have h_cp_nil : (commaPrefixKV ([] : List (String × Json))).toUTF8.size = 0 := by
@@ -744,24 +754,29 @@ private theorem bodyFwd_comma_kv_run
 /-- The committed tail loop over a comma-prefixed element list. Each `,` obliges an element,
 and the loop exits on the closing `]`, consuming it — so the returned offset is one past the
 bracket, where the old `foldFwd` stopped short of it. -/
-private theorem bodyFwd_comma_value_run (lst : List Json) (buf : ByteArray) (acc : Array Json)
+private
+theorem bodyFwd_comma_value_run
+    (lst : List Json)
+    (buf : ByteArray)
+    (acc : Array Json)
     (base : Nat)
     (h_bound : base + (commaPrefix lst).toUTF8.size < buf.size)
     (h_match : ∀ j, j < (commaPrefix lst).toUTF8.size → buf[base + j]! =
-        (commaPrefix lst).toUTF8[j]!)
+      (commaPrefix lst).toUTF8[j]!)
     (h_close : buf[base + (commaPrefix lst).toUTF8.size]! = 93)
     (h_vp : ∀ x ∈ lst, ∀ (p : Nat),
-        p + (render x).toUTF8.size ≤ buf.size →
-        (∀ j, j < (render x).toUTF8.size → buf[p + j]! = (render x).toUTF8[j]!) →
-        (p + (render x).toUTF8.size = buf.size ∨
-         p + (render x).toUTF8.size < buf.size ∧
-           Ascii.isDigit buf[p + (render x).toUTF8.size]! = false ∧
-           buf[p + (render x).toUTF8.size]! ≠ 46 ∧
-           Ascii.isExp buf[p + (render x).toUTF8.size]! = false) →
-        Grip.Json.value.run buf p = .ok x (p + (render x).toUTF8.size)) :
-    Grip.Json.bodyFwd (fun (a : Array Json) e => a.push e) Grip.Json.value Ascii.rbracket "']'"
-        buf acc false base =
-      .ok (acc ++ lst.toArray) (base + (commaPrefix lst).toUTF8.size + 1) := by
+      p + (render x).toUTF8.size ≤ buf.size →
+      (∀ j, j < (render x).toUTF8.size → buf[p + j]! = (render x).toUTF8[j]!) →
+      (p + (render x).toUTF8.size = buf.size ∨
+       p + (render x).toUTF8.size < buf.size ∧
+         Ascii.isDigit buf[p + (render x).toUTF8.size]! = false ∧
+         buf[p + (render x).toUTF8.size]! ≠ 46 ∧
+         Ascii.isExp buf[p + (render x).toUTF8.size]! = false) →
+      Grip.Json.value.run buf p = .ok x (p + (render x).toUTF8.size))
+    : Grip.Json.bodyFwd (fun (a : Array Json) e => a.push e) Grip.Json.value Ascii.rbracket "']'"
+          buf acc false base =
+        .ok (acc ++ lst.toArray) (base + (commaPrefix lst).toUTF8.size + 1)
+    := by
   induction lst generalizing base acc with
   | nil =>
     have h_cp_nil : (commaPrefix ([] : List Json)).toUTF8.size = 0 := rfl
@@ -871,15 +886,16 @@ private theorem bodyFwd_comma_value_run (lst : List Json) (buf : ByteArray) (acc
 The `hstop` hypothesis says the byte immediately after the rendered value is not a number
 continuation (digit / `.` / `e`/`E`); it is needed only for the `.num` case but carried
 uniformly to enable structural recursion for the `.arr` and `.obj` cases. -/
-theorem value_run_at : ∀ (v : Json) (buf : ByteArray) (q : Nat),
-    q + (render v).toUTF8.size ≤ buf.size →
-    (∀ i, i < (render v).toUTF8.size → buf[q + i]! = (render v).toUTF8[i]!) →
-    (q + (render v).toUTF8.size = buf.size ∨
-     q + (render v).toUTF8.size < buf.size ∧
-       Ascii.isDigit buf[q + (render v).toUTF8.size]! = false ∧
-       buf[q + (render v).toUTF8.size]! ≠ 46 ∧
-       Ascii.isExp buf[q + (render v).toUTF8.size]! = false) →
-    Grip.Json.value.run buf q = .ok v (q + (render v).toUTF8.size)
+theorem value_run_at
+    : ∀ (v : Json) (buf : ByteArray) (q : Nat),
+      q + (render v).toUTF8.size ≤ buf.size →
+      (∀ i, i < (render v).toUTF8.size → buf[q + i]! = (render v).toUTF8[i]!) →
+      (q + (render v).toUTF8.size = buf.size ∨
+       q + (render v).toUTF8.size < buf.size ∧
+         Ascii.isDigit buf[q + (render v).toUTF8.size]! = false ∧
+         buf[q + (render v).toUTF8.size]! ≠ 46 ∧
+         Ascii.isExp buf[q + (render v).toUTF8.size]! = false) →
+      Grip.Json.value.run buf q = .ok v (q + (render v).toUTF8.size)
   | .null, buf, q, hq, hmatch, _ => by
     have hrend : render Json.null = "null" := by simp [render]
     simp only [hrend, show ("null" : String).toUTF8.size = 4 from by decide] at hq hmatch ⊢
