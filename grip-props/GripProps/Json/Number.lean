@@ -77,7 +77,7 @@ theorem foldl_numByte_digits
     obtain ⟨hc1, hc2⟩ := hd c (by simp)
     rw [List.foldl_cons, numByte_digit st c hc1 hc2]
     simp only [hp, ↓reduceIte]
-    rw [ih _ (by simp [hp]) (fun c hc => hd c (by simp [hc]))]
+    rw [ih _ (by simp) (fun c hc => hd c (by simp [hc]))]
     simp [List.foldl_cons]
 
 /-- Phase-1 (fractional) `numByte` fold: accumulate the mantissa and count each digit. -/

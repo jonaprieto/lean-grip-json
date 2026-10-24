@@ -1283,7 +1283,7 @@ theorem value_run_num_scientific
       simpa [Nat.add_assoc] using hnum
     rw [hsize]
     exact value_run_number buf q m e (ip + 2 + ep) (by omega) (Or.inl hstart') hnum'
-  · push_neg at hm
+  · push Not at hm
     set ip := (Nat.toDigits 10 m.natAbs).length
     set ep := (Nat.toDigits 10 e).length
     have hip_size : (toString m.natAbs).toUTF8.size = ip := by
@@ -1493,7 +1493,7 @@ theorem value_run_num_at
           (GripProps.Number.decode_renderNum_int m hm)
       exact value_run_num_int buf q m hm _ hn hq hstruct hstop hdec
     · -- e = 0, m < 0: negative integer
-      push_neg at hm
+      push Not at hm
       have hrn : renderNum m 0 = "-" ++ toString m.natAbs := by
         unfold renderNum; simp [if_pos (show m < 0 from hm)]
       set ip := (Nat.toDigits 10 m.natAbs).length with hip_def
@@ -1569,7 +1569,7 @@ theorem value_run_num_at
       rw [show q + (renderNum m 0).toUTF8.size = q + 1 + ip from by rw [hsize]; omega]
       exact value_run_num_int_neg buf q m hm ip hip hq' hdash_buf hstruct_buf hstop' hdec
   · -- e > 0: fractional number
-    have he_pos : 0 < e := by push_neg at he; omega
+    have he_pos : 0 < e := by push Not at he; omega
     by_cases hm : 0 ≤ m
     · -- e > 0, m ≥ 0: non-negative fractional
       set len := (toString m.natAbs).length with hlen_def
@@ -1636,7 +1636,7 @@ theorem value_run_num_at
             GripProps.NatDigits.toDigits_nonempty m.natAbs hna_pos
           have hbounds0 := GripProps.NatDigits.toDigits_head_pos m.natAbs hna_pos
           have hlt256_0 : (Nat.toDigits 10 m.natAbs).head!.toNat < 256 := by omega
-          have hds_eq : ds = Nat.toDigits 10 m.natAbs := by simp [hds_def, hpads0, htl]
+          have hds_eq : ds = Nat.toDigits 10 m.natAbs := by simp [hds_def, hpads0]
           have hh : 0 < (ds.take k).length := by
             rw [List.length_take, Nat.min_eq_left (by omega)]; omega
           have harr0 : (renderNum m e).toUTF8[0]! =
@@ -1734,7 +1734,7 @@ theorem value_run_num_at
       exact value_run_num_frac buf q m e k (k + 1 + e) hm hk_pos (by omega) (harr_size ▸ hq)
         hintstruct_buf hdot_buf hfrac_buf hstop' hdec
     · -- e > 0, m < 0: negative fractional
-      push_neg at hm
+      push Not at hm
       set len := (toString m.natAbs).length with hlen_def
       set ds := List.replicate (e + 1 - len) '0' ++ (toString m.natAbs).toList with hds_def
       set k := ds.length - e with hk_def
@@ -1803,7 +1803,7 @@ theorem value_run_num_at
             GripProps.NatDigits.toDigits_nonempty m.natAbs hna_pos
           have hbounds0 := GripProps.NatDigits.toDigits_head_pos m.natAbs hna_pos
           have hlt256_0 : (Nat.toDigits 10 m.natAbs).head!.toNat < 256 := by omega
-          have hds_eq : ds = Nat.toDigits 10 m.natAbs := by simp [hds_def, hpads0, htl]
+          have hds_eq : ds = Nat.toDigits 10 m.natAbs := by simp [hds_def, hpads0]
           have hh : 0 < (ds.take k).length := by
             rw [List.length_take, Nat.min_eq_left (by omega)]; omega
           have harr1 : (renderNum m e).toUTF8[1]! =
