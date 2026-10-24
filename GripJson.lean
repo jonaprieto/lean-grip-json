@@ -387,17 +387,17 @@ def jstr
     split at heq
     · split at heq
       · have := scanStr_gt arr q (q + 1) q' false a heq; omega
-      · exact absurd heq (by simp)
-    · exact absurd heq (by simp)
-  ewit := by intro he; exact absurd he (by decide)
-  swit := by intro he; exact absurd he (by decide)
+      · nomatch heq
+    · nomatch heq
+  ewit := nofun
+  swit := nofun
   bwit := by
     intro arr q a q' hq heq
     split at heq
     · split at heq
       · exact scanStr_le arr q (q + 1) q' false a heq
-      · exact absurd heq (by simp)
-    · exact absurd heq (by simp)
+      · nomatch heq
+    · nomatch heq
   fwit := by
     intro arr q e hq heq
     split at heq
@@ -454,16 +454,16 @@ def wsDispatch
     · have hge := scanFwd_ge arr Ascii.isWs q
       have hc := (select _).cwit heq
       omega
-    · exact absurd heq (by simp)
-  ewit := by intro he; exact absurd he (by decide)
-  swit := by intro he; exact absurd he (by decide)
+    · nomatch heq
+  ewit := nofun
+  swit := nofun
   bwit := by
     intro arr q a q' hq heq
     simp only [] at heq
     split at heq
     · have hle := scanFwd_le arr Ascii.isWs q hq
       exact (select _).bwit hle heq
-    · exact absurd heq (by simp)
+    · nomatch heq
   fwit := by
     intro arr q e hq heq
     simp only [] at heq
@@ -499,10 +499,10 @@ def wsByte
         simp only [ParseResult.ok.injEq] at heq
         obtain ⟨_, rfl⟩ := heq
         omega
-      · exact absurd heq (by simp)
-    · exact absurd heq (by simp)
-  ewit := by intro he; exact absurd he (by decide)
-  swit := by intro he; exact absurd he (by decide)
+      · nomatch heq
+    · nomatch heq
+  ewit := nofun
+  swit := nofun
   bwit := by
     intro arr q a q' hq heq
     simp only [] at heq
@@ -512,8 +512,8 @@ def wsByte
       · simp only [ParseResult.ok.injEq] at heq
         obtain ⟨_, rfl⟩ := heq
         omega
-      · exact absurd heq (by simp)
-    · exact absurd heq (by simp)
+      · nomatch heq
+    · nomatch heq
   fwit := by
     intro arr q e hq heq
     simp only [] at heq
@@ -521,7 +521,7 @@ def wsByte
     have hle := scanFwd_le arr Ascii.isWs q hq
     split at heq
     · split at heq
-      · exact absurd heq (by simp)
+      · nomatch heq
       · simp only [ParseResult.error.injEq] at heq
         subst heq
         exact ⟨hge, hle⟩
@@ -685,8 +685,8 @@ def containerBody
   run := fun arr q => bodyFwd push elem close closeName arr acc true q
   cwit := by
     intro arr q b q' h; exact bodyFwd_gt push elem close closeName arr acc true q b q' h
-  ewit := by intro he; exact absurd he (by decide)
-  swit := by intro he; exact absurd he (by decide)
+  ewit := nofun
+  swit := nofun
   bwit := by
     intro arr q b q' _ h; exact bodyFwd_le push elem close closeName arr acc true q b q' h
   fwit := by
