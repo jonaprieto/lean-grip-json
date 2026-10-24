@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.8 — 2026-10-24
+
+- Refresh Grip to v0.4.1, in both Lake projects. Proofs that unfolded `seqR`, `seqL` or `map2`
+  rewrite with Grip's new `seqR_run`, `seqL_run` and `map2_run`.
+- An unpaired surrogate escape decodes to U+FFFD instead of being dropped, decoding to NUL, or
+  being merged into the next `\u` escape (`"\uD834\u0041"` used to lose the `A`).
+- Move the library's `#guard` checks to the test library, so importing `GripJson` no longer
+  elaborates them, and drop the test library's copy of Grip's own guards.
+- Prove the `escEnd`, `scanStr` and `bodyFwd` bounds lemmas by functional induction; statements
+  and axioms are unchanged.
+- Correct the parser docstrings and the README install snippet.
+- The property suite builds without warnings and follows the declaration layout.
+
 ## 0.1.7 — 2026-09-09
 
 - Refresh Grip and document the contribution policy and package problem.

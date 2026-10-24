@@ -2,7 +2,7 @@ import Lake
 open Lake DSL
 
 package «grip-json» where
-  version := v!"0.1.7"
+  version := v!"0.1.8"
   leanOptions := #[⟨`autoImplicit, false⟩, ⟨`relaxedAutoImplicit, false⟩]
 
 require grip from git
