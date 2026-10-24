@@ -101,9 +101,19 @@ structure UState where
   uAcc  : Nat := 0        -- hex value accumulated so far
   hi    : Nat := 0        -- pending high surrogate (0 = none)
 
+/-- The output so far, with U+FFFD, the replacement character, standing in for a pending high
+surrogate that will not be paired. -/
+def UState.flush
+    (st : UState)
+    : String
+    :=
+  if st.hi = 0 then st.out else st.out.push '\uFFFD'
+
 /-- One step of `unescape`. Handles simple escapes, `\uXXXX`, and a high/low surrogate
-pair combined into one scalar. Assumes a grammar-validated body, so malformed input is
-handled leniently rather than rejected. -/
+pair combined into one scalar. An unpaired surrogate, a high one not followed by a `\u` low one
+or a lone low one, decodes to U+FFFD instead of being dropped or merged into the next escape.
+Assumes a grammar-validated body, so malformed input is handled leniently rather than
+rejected. -/
 def uStep
     (st : UState)
     (c : Char)
@@ -112,13 +122,15 @@ def uStep
   if st.uLeft > 0 then
     let acc := st.uAcc * 16 + Grip.Ascii.hexValue (UInt8.ofNat c.toNat)
     if st.uLeft == 1 then
-      if st.hi ≠ 0 then
+      if st.hi ≠ 0 && 0xDC00 ≤ acc && acc ≤ 0xDFFF then
         let full := 0x10000 + (st.hi - 0xD800) * 0x400 + (acc - 0xDC00)
         { st with out := st.out.push (Char.ofNat full), uLeft := 0, uAcc := 0, hi := 0 }
       else if 0xD800 ≤ acc && acc ≤ 0xDBFF then
-        { st with uLeft := 0, uAcc := 0, hi := acc }
+        { st with out := st.flush, uLeft := 0, uAcc := 0, hi := acc }
+      else if 0xDC00 ≤ acc && acc ≤ 0xDFFF then
+        { st with out := st.flush.push '\uFFFD', uLeft := 0, uAcc := 0, hi := 0 }
       else
-        { st with out := st.out.push (Char.ofNat acc), uLeft := 0, uAcc := 0 }
+        { st with out := st.flush.push (Char.ofNat acc), uLeft := 0, uAcc := 0, hi := 0 }
     else
       { st with uLeft := st.uLeft - 1, uAcc := acc }
   else if st.esc then
@@ -132,14 +144,14 @@ def uStep
         else if c == 'b' then Char.ofNat 8
         else if c == 'f' then Char.ofNat 12
         else c   -- `"` `\` `/` decode to themselves
-      { st with out := st.out.push d }
+      { st with out := st.flush.push d, hi := 0 }
   else if c == '\\' then { st with esc := true }
-  else { st with out := st.out.push c }
+  else { st with out := st.flush.push c, hi := 0 }
 
 /-- Decode the escapes in a JSON string body (no surrounding quotes). Folds over `s.toList`
 (not `s.foldl`) so the round-trip proof can rewrite with `String.toList_ofList`; this runs only
 when a body actually contained a `\`-escape, off the escape-free fast path. -/
-def unescape (s : String) : String := (s.toList.foldl uStep {}).out
+def unescape (s : String) : String := (s.toList.foldl uStep {}).flush
 
 /-- State threaded through `decodeNumberBytes?`'s single fold over the whole lexeme. -/
 structure NState where
