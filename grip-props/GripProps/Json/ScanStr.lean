@@ -84,8 +84,8 @@ theorem passthrough_props
   by_cases hctrl : c.toNat < 0x20
   · simp [h34, h92, hn, ht, hr, hb8, hf12, hctrl] at h
   refine ⟨by omega, ?_, ?_⟩
-  · intro he; exact h34 (Char.eq_of_val_eq (he.trans (by decide)))
-  · intro he; exact h92 (Char.eq_of_val_eq (he.trans (by decide)))
+  · intro he; exact h34 (Char.ext (he.trans (by decide)))
+  · intro he; exact h92 (Char.ext (he.trans (by decide)))
 
 /-- Decoding the UTF-8 bytes of a string recovers it: `fromUTF8!` inverts `toUTF8`. The body that
 `scanStr` extracts at the closing quote is exactly `(escape s).toUTF8`, so this turns it back into
@@ -470,7 +470,7 @@ theorem scanStr_char_escape
       simp only [List.flatMap_cons, List.flatMap_nil, hexDigit_utf8,
         show String.utf8EncodeChar '\\' = [92] from by decide,
         show String.utf8EncodeChar 'u' = [117] from by decide,
-        show String.utf8EncodeChar '0' = [48] from by decide, List.append_assoc,
+        show String.utf8EncodeChar '0' = [48] from by decide,
         List.nil_append, List.cons_append]
     exact escapeU_of arr q0 q esc c _ _ hcb (isHexDigit_hexDigit _) (isHexDigit_hexDigit _)
       hcontent hbound
@@ -601,7 +601,7 @@ theorem escape_toUTF8_size
 theorem escape_toUTF8_getElem!
     (s : String)
     (i : Nat)
-    (hi : i < (ebytes s.toList).length)
+    (_hi : i < (ebytes s.toList).length)
     : (escape s).toUTF8[i]! = (ebytes s.toList)[i]!
     := by
   rw [GripProps.Bytes.getElem!_eq_toList, escape_toUTF8_data_toList]
