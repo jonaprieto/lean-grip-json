@@ -235,18 +235,8 @@ theorem escEnd_gt
     (h : escEnd arr q = some q')
     : q < q'
     := by
-  rw [escEnd] at h
-  split at h
-  · split at h
-    · simp only [Option.some.injEq] at h; omega
-    · split at h
-      · split at h
-        · split at h
-          · simp only [Option.some.injEq] at h; omega
-          · exact absurd h (by simp)
-        · exact absurd h (by simp)
-      · exact absurd h (by simp)
-  · exact absurd h (by simp)
+  revert h
+  fun_cases escEnd arr q <;> intro h <;> cases h <;> omega
 
 /-- Scan a strict RFC-8259 string body and produce the decoded `String` in one pass. `q0` is
 the opening-quote index and `q` the current scan position; `esc` accumulates whether any `\`
@@ -287,20 +277,8 @@ theorem escEnd_le
     (h : escEnd arr q = some q')
     : q' ≤ arr.size
     := by
-  rw [escEnd] at h
-  split at h
-  · rename_i h1
-    split at h
-    · simp only [Option.some.injEq] at h; omega
-    · split at h
-      · split at h
-        · rename_i h2
-          split at h
-          · simp only [Option.some.injEq] at h; omega
-          · exact absurd h (by simp)
-        · exact absurd h (by simp)
-      · exact absurd h (by simp)
-  · exact absurd h (by simp)
+  revert h
+  fun_cases escEnd arr q <;> intro h <;> cases h <;> omega
 
 /-- `scanStr` reports a failure between the opening quote and the end of the input. The lower
 bound is `q0` rather than `q` because a body that fails UTF-8 validation is reported back at
@@ -316,40 +294,13 @@ theorem scanStr_err
     : q0 ≤ e.pos ∧
       e.pos ≤ arr.size
     := by
-  rw [scanStr] at h
-  split at h
-  · rename_i hlt
-    split at h
-    · split at h
-      · exact absurd h (by simp)
-      · simp only [ParseResult.error.injEq] at h
-        subst h
-        exact ⟨Nat.le_refl q0, Nat.le_trans h0 hq⟩
-    · split at h
-      · split at h
-        · next q'' hE =>
-            have hgt := escEnd_gt arr q q'' hE
-            have hle := escEnd_le arr q q'' hE
-            have := scanStr_err arr q0 q'' true e (Nat.le_trans h0 (Nat.le_of_lt hgt)) hle h
-            omega
-        · simp only [ParseResult.error.injEq] at h
-          subst h
-          exact ⟨h0, hq⟩
-      · split at h
-        · simp only [ParseResult.error.injEq] at h
-          subst h
-          exact ⟨h0, hq⟩
-        · have := scanStr_err arr q0 (q + 1) esc e (Nat.le_trans h0 (Nat.le_succ q)) hlt h
-          omega
-  · simp only [ParseResult.error.injEq] at h
-    subst h
-    exact ⟨h0, hq⟩
-termination_by arr.size - q
-decreasing_by
-  all_goals
+  revert h0 hq h
+  fun_induction scanStr arr q0 q esc <;> intro h0 hq h <;>
     first
-      | omega
-      | exact Nat.sub_lt_sub_left ‹q < arr.size› (escEnd_gt arr q _ ‹escEnd arr q = some _›)
+      | (cases h; done)
+      | (cases h; dsimp only; omega)
+      | exact ‹_ → _ → _ → _› (by have := escEnd_gt arr _ _ ‹_›; omega) (escEnd_le arr _ _ ‹_›) h
+      | exact ‹_ → _ → _ → _› (by omega) (by omega) h
 
 /-- `scanStr` strictly advances past its current position on success. -/
 theorem scanStr_gt
@@ -360,30 +311,12 @@ theorem scanStr_gt
     (h : scanStr arr q0 q esc = .ok a q')
     : q < q'
     := by
-  rw [scanStr] at h
-  split at h
-  · rename_i hq
-    split at h
-    · split at h
-      · simp only [ParseResult.ok.injEq] at h; omega
-      · exact absurd h (by simp)
-    · split at h
-      · split at h
-        · next q'' hE =>
-            have := escEnd_gt arr q q'' hE
-            have := scanStr_gt arr q0 q'' q' true a h
-            omega
-        · exact absurd h (by simp)
-      · split at h
-        · exact absurd h (by simp)
-        · have := scanStr_gt arr q0 (q + 1) q' esc a h; omega
-  · exact absurd h (by simp)
-termination_by arr.size - q
-decreasing_by
-  all_goals
+  revert h
+  fun_induction scanStr arr q0 q esc <;> intro h <;>
     first
-      | omega
-      | exact Nat.sub_lt_sub_left ‹q < arr.size› (escEnd_gt arr q _ ‹escEnd arr q = some _›)
+      | (cases h <;> omega)
+      | (have := escEnd_gt arr _ _ ‹_›; have := ‹_ → _› h; omega)
+      | (have := ‹_ → _› h; omega)
 
 /-- `scanStr` stays within bounds on success. -/
 theorem scanStr_le
@@ -394,27 +327,9 @@ theorem scanStr_le
     (h : scanStr arr q0 q esc = .ok a q')
     : q' ≤ arr.size
     := by
-  rw [scanStr] at h
-  split at h
-  · rename_i hq
-    split at h
-    · split at h
-      · simp only [ParseResult.ok.injEq] at h; omega
-      · exact absurd h (by simp)
-    · split at h
-      · split at h
-        · next q'' hE => exact scanStr_le arr q0 q'' q' true a h
-        · exact absurd h (by simp)
-      · split at h
-        · exact absurd h (by simp)
-        · exact scanStr_le arr q0 (q + 1) q' esc a h
-  · exact absurd h (by simp)
-termination_by arr.size - q
-decreasing_by
-  all_goals
-    first
-      | omega
-      | exact Nat.sub_lt_sub_left ‹q < arr.size› (escEnd_gt arr q _ ‹escEnd arr q = some _›)
+  revert h
+  fun_induction scanStr arr q0 q esc <;> intro h <;>
+    first | (cases h <;> omega) | exact ‹_ → _› h
 
 -- Leaf value parsers -----------------------------------------------------
 
@@ -689,41 +604,12 @@ theorem bodyFwd_gt
     (h : bodyFwd push elem close closeName arr acc first q = .ok b q')
     : q < q'
     := by
-  rw [bodyFwd] at h
-  simp only [] at h
-  have hge := scanFwd_ge arr Ascii.isWs q
-  split at h
-  · split at h
-    · next x q'' _ =>
-        split at h
-        · next hg =>
-            have := bodyFwd_gt push elem close closeName arr (push acc x) false q'' b q' h
-            omega
-        · exact absurd h (by simp)
-    · split at h
-      · split at h
-        · simp only [ParseResult.ok.injEq] at h; omega
-        · exact absurd h (by simp)
-      · exact absurd h (by simp)
-  · split at h
-    · split at h
-      · simp only [ParseResult.ok.injEq] at h; omega
-      · split at h
-        · split at h
-          · next x q'' _ =>
-              split at h
-              · next hg =>
-                  have := bodyFwd_gt push elem close closeName arr (push acc x) false q'' b q' h
-                  omega
-              · exact absurd h (by simp)
-          · exact absurd h (by simp)
-        · exact absurd h (by simp)
-    · exact absurd h (by simp)
-termination_by arr.size - q
-decreasing_by
-  · omega
-  · have := scanFwd_ge arr Ascii.isWs q
-    omega
+  revert h
+  fun_induction bodyFwd push elem close closeName arr acc first q <;> intro h <;>
+    first
+      | (cases h; done)
+      | (cases h; exact Nat.lt_succ_of_le (scanFwd_ge arr Ascii.isWs _))
+      | (have := ‹_ → _› h; omega)
 
 /-- `bodyFwd` reports a failure between its starting offset and the end of the input.
 
@@ -746,63 +632,21 @@ theorem bodyFwd_err
     : q ≤ e.pos ∧
       e.pos ≤ arr.size
     := by
-  rw [bodyFwd] at h
-  simp only [] at h
-  have hge := scanFwd_ge arr Ascii.isWs q
-  have hle := scanFwd_le arr Ascii.isWs q hq
-  split at h
-  · split at h
-    · next x q'' hx =>
-        split at h
-        · next hg =>
-            have := bodyFwd_err push elem close closeName arr (push acc x) false q'' e hg.2 h
-            omega
-        · next hg =>
-            exact absurd ⟨elem.cwit hx, elem.bwit hq hx⟩ hg
-    · next e₀ hx =>
-        have hfw := elem.fwit hq hx
-        split at h
-        · split at h
-          · exact absurd h (by simp)
-          · simp only [ParseResult.error.injEq] at h
-            subst h
-            exact hfw
-        · simp only [ParseResult.error.injEq] at h
-          subst h
-          exact hfw
-  · split at h
-    · rename_i hp
-      split at h
-      · exact absurd h (by simp)
-      · split at h
-        · split at h
-          · next x q'' hx =>
-              have hp1 : scanFwd arr Ascii.isWs q + 1 ≤ arr.size := hp
-              split at h
-              · next hg =>
-                  have := bodyFwd_err push elem close closeName arr (push acc x) false q'' e hg.2 h
-                  omega
-              · next hg =>
-                  have hcw := elem.cwit hx
-                  have hbw := elem.bwit hp1 hx
-                  exact absurd ⟨by omega, hbw⟩ hg
-          · next e₀ hx =>
-              have hp1 : scanFwd arr Ascii.isWs q + 1 ≤ arr.size := hp
-              have hfw := elem.fwit hp1 hx
-              simp only [ParseResult.error.injEq] at h
-              subst h
-              omega
-        · simp only [ParseResult.error.injEq] at h
-          subst h
-          exact ⟨hge, hle⟩
-    · simp only [ParseResult.error.injEq] at h
-      subst h
-      exact ⟨hge, hle⟩
-termination_by arr.size - q
-decreasing_by
-  · omega
-  · have := scanFwd_ge arr Ascii.isWs q
-    omega
+  revert hq h
+  fun_induction bodyFwd push elem close closeName arr acc first q <;> intro hq h <;>
+    first
+      | (cases h; done)
+      | (cases h; exact elem.fwit hq ‹_›)
+      | (cases h; exact ⟨scanFwd_ge arr Ascii.isWs _, scanFwd_le arr Ascii.isWs _ hq⟩)
+      | (cases h
+         have hf := elem.fwit (Nat.succ_le_of_lt ‹_ < arr.size›) ‹_›
+         exact ⟨Nat.le_trans (scanFwd_ge arr Ascii.isWs _) (Nat.le_of_succ_le hf.1), hf.2⟩)
+      | (exfalso; apply ‹¬(_ ∧ _)›; exact ⟨elem.cwit ‹_›, elem.bwit hq ‹_›⟩)
+      | (exfalso; apply ‹¬(_ ∧ _)›
+         exact ⟨Nat.lt_of_le_of_lt (scanFwd_ge arr Ascii.isWs _)
+             (Nat.lt_of_succ_lt (elem.cwit ‹_›)),
+           elem.bwit (Nat.succ_le_of_lt ‹_ < arr.size›) ‹_›⟩)
+      | (have := ‹_ → _ → _› ‹_ ∧ _›.2 h; omega)
 
 /-- `bodyFwd` stays within bounds on success. -/
 theorem bodyFwd_le
@@ -820,40 +664,9 @@ theorem bodyFwd_le
     (h : bodyFwd push elem close closeName arr acc first q = .ok b q')
     : q' ≤ arr.size
     := by
-  rw [bodyFwd] at h
-  simp only [] at h
-  have hge := scanFwd_ge arr Ascii.isWs q
-  split at h
-  · split at h
-    · next x q'' _ =>
-        split at h
-        · next hg => exact bodyFwd_le push elem close closeName arr (push acc x) false q'' b q' h
-        · exact absurd h (by simp)
-    · split at h
-      · rename_i hp
-        split at h
-        · simp only [ParseResult.ok.injEq] at h; omega
-        · exact absurd h (by simp)
-      · exact absurd h (by simp)
-  · split at h
-    · rename_i hp
-      split at h
-      · simp only [ParseResult.ok.injEq] at h; omega
-      · split at h
-        · split at h
-          · next x q'' _ =>
-              split at h
-              · next hg =>
-                  exact bodyFwd_le push elem close closeName arr (push acc x) false q'' b q' h
-              · exact absurd h (by simp)
-          · exact absurd h (by simp)
-        · exact absurd h (by simp)
-    · exact absurd h (by simp)
-termination_by arr.size - q
-decreasing_by
-  · omega
-  · have := scanFwd_ge arr Ascii.isWs q
-    omega
+  revert h
+  fun_induction bodyFwd push elem close closeName arr acc first q <;> intro h <;>
+    first | (cases h <;> omega) | exact ‹_ → _› h
 
 /-- A whole container body: `elem`s separated by `,`, terminated by `close`, folded into `acc`
 with `push`. Consumes the closing byte, so it is `conditional` (always consumes on success).
