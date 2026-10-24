@@ -6,95 +6,78 @@ Authors: Jonathan Prieto-Cubides
 import Grip
 import GripJson
 
-/-! Milestone 0 smoke test. `#guard` runs at elaboration, so a false guard is a build
-error and turns the `core` CI job red. Real parser tests arrive in Milestone 1. -/
+/-! Compile-time checks for grip-json. `#guard` runs at elaboration, so a false guard fails the
+build of this library. -/
 
-#guard (1 + 1 = 2)
-
-/-! ### Sanity: the graded byte backend parses. -/
+/-! ### Values: what each document parses to, and what `render` prints. -/
 section
-open Grip
+open Grip Grip.Json
 
-private
-def digits
-    : GParser conditional Nat
-    :=
-  GParser.takeWhile1 (fun b => 48 ≤ b && b ≤ 57)
+#guard (GParser.run? parser "null".toUTF8) == some Json.null
+#guard (GParser.run? parser "true".toUTF8) == some (Json.bool true)
+#guard (GParser.run? parser "false".toUTF8) == some (Json.bool false)
+-- integers are `num n 0`, full bignum precision, signs handled
+#guard (GParser.run? parser "42".toUTF8) == some (Json.num 42 0)
+#guard (GParser.run? parser "-42".toUTF8) == some (Json.num (-42) 0)
+#guard (GParser.run? parser "0".toUTF8) == some (Json.num 0 0)
+#guard (GParser.run? parser "123456789012345678901234567890".toUTF8)
+        == some (Json.num 123456789012345678901234567890 0)
+-- fraction / exponent / signs => exact mantissa * 10^(-exponent), no rounding
+#guard (GParser.run? parser "2.5".toUTF8) == some (Json.num 25 1)
+#guard (GParser.run? parser "-2.5e3".toUTF8) == some (Json.num (-2500) 0)
+#guard (GParser.run? parser "5e-1".toUTF8) == some (Json.num 5 1)
+-- exponent within `maxExp` folds; a huge positive one is rejected, not powered (no panic)
+#guard (GParser.run? parser "1e6".toUTF8) == some (Json.num 1000000 0)
+#guard (GParser.run? parser "1e999999999999".toUTF8) == none
+#guard (GParser.run? parser "1e-999999999999".toUTF8) == some (Json.num 1 999999999999)
+#guard Json.renderNumber 1 (Decode.maxExp + 1) == "1e-1000001"
+#guard (GParser.run? parser (Json.render (Json.num 1 (Decode.maxExp + 1))).toUTF8) ==
+  some (Json.num 1 (Decode.maxExp + 1))
+#guard (GParser.run? parser (Json.render (Json.num (-1) (Decode.maxExp + 1))).toUTF8) ==
+  some (Json.num (-1) (Decode.maxExp + 1))
+-- `int` smart constructor and strict `int?` extractor
+#guard Json.int 42 == Json.num 42 0
+#guard (Json.num 42 0).int? == some 42
+#guard (Json.num 25 1).int? == none
+#guard Json.null.int? == none
+-- accessors
+#guard (Json.obj #[("a", Json.int 1)]).get? "a" == some (Json.int 1)
+#guard (Json.obj #[("a", Json.int 1)]).get? "b" == none
+#guard Json.null.get? "a" == none
+#guard (Json.arr #[Json.int 1, Json.int 2]).at? 1 == some (Json.int 2)
+#guard (Json.arr #[Json.int 1]).at? 5 == none
+-- strings: escapes and \u decode
+#guard (GParser.run? parser "\"a\\nb\"".toUTF8) == some (Json.str "a\nb")
+#guard (GParser.run? parser "\"\\u0041\"".toUTF8) == some (Json.str "A")
+#guard (GParser.run? parser "\"\\uD834\\uDD1E\"".toUTF8) == some (Json.str "𝄞")
+-- containers
+#guard (GParser.run? parser "[1,2,3]".toUTF8)
+        == some (Json.arr #[Json.num 1 0, Json.num 2 0, Json.num 3 0])
+#guard (GParser.run? parser "[]".toUTF8) == some (Json.arr #[])
+#guard (GParser.run? parser "[ 1 , 2 ]".toUTF8)               -- whitespace around array elements
+        == some (Json.arr #[Json.num 1 0, Json.num 2 0])
+#guard (GParser.run? parser "{}".toUTF8) == some (Json.obj #[])
+#guard (GParser.run? parser "  { \"a\" : true , \"b\" : [1] }  ".toUTF8)
+        == some (Json.obj #[("a", Json.bool true), ("b", Json.arr #[Json.num 1 0])])
+-- strict RFC-8259 rejections
+#guard (GParser.run? parser "01".toUTF8) == none            -- leading zero
+#guard (GParser.run? parser "1.".toUTF8) == none            -- trailing dot
+#guard (GParser.run? parser "1e".toUTF8) == none            -- bare exponent
+#guard (GParser.run? parser "[1,]".toUTF8) == none          -- trailing comma
+#guard (GParser.run? parser "1 2".toUTF8) == none           -- trailing garbage
+#guard (GParser.run? parser "\"a\\q\"".toUTF8) == none      -- bad escape
 
-private def sample :=
-  GParser.seqR (GParser.byte 40) (GParser.seqL digits (GParser.byte 41))  -- "(" digits ")"
-
-#guard (GParser.run? digits "123".toUTF8) == some 3        -- 3 digit bytes consumed
-#guard (GParser.run? sample "(42)".toUTF8) == some 2       -- 2 digit bytes inside parens
-#guard (GParser.run? sample "(42".toUTF8) == none          -- missing ')'
-#guard (GParser.run? (GParser.foldMany (· + ·) 0 digits) "".toUTF8) == some 0
-
-/-! ### Incremental migration: recover one precise primitive without grading the caller. -/
-
-private
-def migratedDigits
-    : GParser conditional Nat
-    :=
-  GParser.takeWhile1 Ascii.isDigit
-
-private
-def migratedGroups
-    : Parser (List Nat)
-    :=
-  GParser.many migratedDigits
-
-#guard (GParser.run? migratedGroups "12".toUTF8) == some [2]
-
--- fix: a recursive nested-parens parser returning the nesting depth. Each level
--- consumes "(" before recursing, so the always-consume clamp never fires on
--- balanced input; unbalanced input fails.
-private
-def parenDepth
-    : GParser conditional Nat
-    :=
-  GParser.fix fun self =>
-    GParser.map (· + 1)
-      (GParser.seqR (GParser.byte 40)
-        (GParser.seqL (GParser.alt self (GParser.pure 0)) (GParser.byte 41)))
-
-#guard (GParser.run? parenDepth "()".toUTF8) == some 1
-#guard (GParser.run? parenDepth "((()))".toUTF8) == some 3
-#guard (GParser.run? parenDepth "(()".toUTF8) == none            -- unbalanced
-
--- Direct left recursion type-checks, but the input-bounded fuel makes it terminate as a
--- failure instead of looping. Guarded bodies such as `parenDepth` above have the stronger
--- completeness theorem; the `conditional → conditional` transformer type alone is insufficient.
-private
-def directLeft
-    : GParser conditional Unit
-    :=
-  GParser.fix fun self => self
-
-#guard (match directLeft.run "x".toUTF8 0 with
-  | .error e => e.pos == 0
-  | .ok _ _ => false)
-
--- BEq for ParseResult, needed by the #guard comparisons below.
-private
-instance instBEqParseResult
-    {β : Type}
-    [BEq β]
-    : BEq (ParseResult β)
-    where
-  beq
-    | .error e1, .error e2 => e1 == e2
-    | .ok a p,   .ok b q   => a == b && p == q
-    | _,         _         => false
-
--- Error payload: bare failure records pos; label sets expected.
-#guard (digits.run "abc".toUTF8 0 == (.error ⟨0, []⟩ : ParseResult Nat))
-#guard ((digits <?> "digit").run "abc".toUTF8 0
-        == (.error ⟨0, ["digit"]⟩ : ParseResult Nat))
--- Tie-merge: both branches fail at pos 0; expected sets are unioned.
-private def byteA : GParser conditional Unit := GParser.byte 65
-private def byteB : GParser conditional Unit := GParser.byte 66
-#guard ((GParser.alt (byteA <?> "A") (byteB <?> "B")).run "c".toUTF8 0
-        == (.error ⟨0, ["A", "B"]⟩ : ParseResult Unit))
+-- serialization: render is compact and round-trips through parse
+#guard toString (Json.num 25 1) == "2.5"
+#guard toString (Json.num 5 3) == "0.005"
+#guard toString (Json.num (-5) 1) == "-0.5"
+#guard toString (Json.int 42) == "42"
+#guard toString (Json.str "a\nb\"c") == "\"a\\nb\\\"c\""
+#guard toString (Json.arr #[Json.int 1, Json.int 2]) == "[1,2]"
+#guard toString (Json.obj #[("a", Json.bool true)]) == "{\"a\":true}"
+#guard
+  (let v := Json.obj #[("a", Json.arr #[Json.num 25 1, Json.null]), ("b", Json.str "x\ty")]
+   (parseString (toString v)).toOption == some v)
 
 end
 
