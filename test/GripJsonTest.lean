@@ -50,6 +50,11 @@ open Grip Grip.Json
 #guard (GParser.run? parser "\"a\\nb\"".toUTF8) == some (Json.str "a\nb")
 #guard (GParser.run? parser "\"\\u0041\"".toUTF8) == some (Json.str "A")
 #guard (GParser.run? parser "\"\\uD834\\uDD1E\"".toUTF8) == some (Json.str "𝄞")
+-- an unpaired surrogate decodes to U+FFFD and leaves the character after it alone
+#guard (GParser.run? parser "\"\\uD834\\u0041\"".toUTF8) == some (Json.str "\uFFFDA")
+#guard (GParser.run? parser "\"\\uD834x\"".toUTF8) == some (Json.str "\uFFFDx")
+#guard (GParser.run? parser "\"\\uD834\"".toUTF8) == some (Json.str "\uFFFD")
+#guard (GParser.run? parser "\"\\uDC00\"".toUTF8) == some (Json.str "\uFFFD")
 -- containers
 #guard (GParser.run? parser "[1,2,3]".toUTF8)
         == some (Json.arr #[Json.num 1 0, Json.num 2 0, Json.num 3 0])

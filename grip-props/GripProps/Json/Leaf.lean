@@ -60,7 +60,7 @@ theorem foldl_escapeChar
     := by
   unfold escapeChar
   split_ifs with h1 h2 h3 h4 h5 h6 h7 h8 <;>
-    simp_all [uStep, List.foldl_cons, List.foldl_nil]
+    simp_all [uStep, UState.flush, List.foldl_cons, List.foldl_nil]
   -- sole remaining goal: the `\u00XX` control-character arm
   rw [hexValue_hexDigit (c.toNat / 16) (by omega), hexValue_hexDigit (c.toNat % 16) (by omega)]
   have h48 : Grip.Ascii.hexValue 48 = 0 := by decide
@@ -68,7 +68,8 @@ theorem foldl_escapeChar
       ((Grip.Ascii.hexValue 48 * 16 + Grip.Ascii.hexValue 48) * 16 + c.toNat / 16) * 16
           + c.toNat % 16 = c.toNat := by
     rw [h48]; omega
-  rw [harg, if_neg (by omega : ¬ (55296 ≤ c.toNat ∧ c.toNat ≤ 56319)), Char.ofNat_toNat]
+  rw [harg, if_neg (by omega : ¬ (55296 ≤ c.toNat ∧ c.toNat ≤ 56319)), Char.ofNat_toNat,
+    if_neg (by omega : ¬ (56320 ≤ c.toNat ∧ c.toNat ≤ 57343))]
 
 /-- The core invariant: folding the per-character escape-decode over `cs`, from a clean state,
 appends exactly `cs` to the output (tracked through `String.toList`). -/
@@ -89,6 +90,23 @@ theorem out_toList_foldl
     rw [ih _ (by simp [he]) (by simp [hu]) (by simp [hh]) (by simp [ha])]
     simp [String.toList_push]
 
+/-- Folding the per-character escape-decode over `cs` from a clean state leaves no high surrogate
+pending, so `unescape`'s final flush adds nothing. -/
+theorem hi_foldl
+    (cs : List Char)
+    (st : UState)
+    (he : st.esc = false)
+    (hu : st.uLeft = 0)
+    (hh : st.hi = 0)
+    (ha : st.uAcc = 0)
+    : (cs.foldl (fun st c => (escapeChar c).foldl uStep st) st).hi = 0
+    := by
+  induction cs generalizing st with
+  | nil => simpa
+  | cons c cs ih =>
+    simp only [List.foldl_cons, foldl_escapeChar st c he hu hh ha]
+    exact ih _ (by simp [he]) (by simp [hu]) (by simp [hh]) (by simp [ha])
+
 /-- **String-escaping round-trip.** Escaping a string and decoding the escapes is the identity.
 This is the leaf Dafny's high-level JSON API leaves unverified. -/
 theorem unescape_escape
@@ -98,7 +116,7 @@ theorem unescape_escape
   unfold unescape escape
   rw [String.toList_ofList, foldl_flatMap]
   apply String.toList_inj.mp
-  rw [out_toList_foldl _ _ rfl rfl rfl rfl]
+  rw [UState.flush, if_pos (hi_foldl _ _ rfl rfl rfl rfl), out_toList_foldl _ _ rfl rfl rfl rfl]
   simp
 
 end GripProps.Leaf
