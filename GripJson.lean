@@ -266,14 +266,15 @@ def scanStr
     if arr[q] == 34 then
       match String.fromUTF8? (arr.extract (q0 + 1) q) with
       | some body => .ok (if esc then unescape body else body) (q + 1)
-      | none       => .error ⟨q0, ["a string body in valid UTF-8"]⟩
+      | none       => .error { pos := q0, expected := ["a string body in valid UTF-8"] }
     else if arr[q] == 92 then
       match hE : escEnd arr q with
       | some q' => scanStr arr q0 q' true
-      | none    => .error ⟨q, ["an escape (\\\" \\\\ \\/ \\b \\f \\n \\r \\t \\uXXXX)"]⟩
-    else if arr[q] < 32 then .error ⟨q, ["an unescaped string character"]⟩
+      | none    =>
+        .error { pos := q, expected := ["an escape (\\\" \\\\ \\/ \\b \\f \\n \\r \\t \\uXXXX)"] }
+    else if arr[q] < 32 then .error { pos := q, expected := ["an unescaped string character"] }
     else scanStr arr q0 (q + 1) esc
-  else .error ⟨q, ["a closing '\"'"]⟩
+  else .error { pos := q, expected := ["a closing '\"'"] }
 termination_by arr.size - q
 decreasing_by
   · exact Nat.sub_lt_sub_left h (escEnd_gt arr q q' hE)
@@ -463,8 +464,9 @@ def jstr
     where
   run := fun arr q =>
     if h : q < arr.size then
-      (if arr[q] == 34 then scanStr arr q (q + 1) false else .error ⟨q, ["a string"]⟩)
-    else .error ⟨q, ["a string"]⟩
+      if arr[q] == 34 then scanStr arr q (q + 1) false
+      else .error { pos := q, expected := ["a string"] }
+    else .error { pos := q, expected := ["a string"] }
   cwit := by
     intro arr q a q' heq
     split at heq
@@ -528,7 +530,8 @@ def wsDispatch
     where
   run := fun arr q =>
     let p := scanFwd arr Ascii.isWs q
-    if _ : p < arr.size then (select arr[p]).run arr p else .error ⟨p, ["a JSON value"]⟩
+    if _ : p < arr.size then (select arr[p]).run arr p
+    else .error { pos := p, expected := ["a JSON value"] }
   cwit := by
     intro arr q a q' heq
     simp only [] at heq
@@ -570,8 +573,8 @@ def wsByte
   run := fun arr q =>
     let p := scanFwd arr Ascii.isWs q
     if _ : p < arr.size then
-      (if arr[p] == b then .ok () (p + 1) else .error ⟨p, [name]⟩)
-    else .error ⟨p, [name]⟩
+      (if arr[p] == b then .ok () (p + 1) else .error { pos := p, expected := [name] })
+    else .error { pos := p, expected := [name] }
   cwit := by
     intro arr q a q' heq
     simp only [] at heq
@@ -645,7 +648,7 @@ def bodyFwd
     | .ok x q' =>
       if h : q < q' ∧ q' ≤ arr.size then
         bodyFwd push elem close closeName arr (push acc x) false q'
-      else .error ⟨q', []⟩
+      else .error { pos := q' }
     | .error e =>
       let p := scanFwd arr Ascii.isWs q
       if _ : p < arr.size then (if arr[p] == close then .ok acc (p + 1) else .error e)
@@ -659,10 +662,10 @@ def bodyFwd
         | .ok x q' =>
           if h2 : q < q' ∧ q' ≤ arr.size then
             bodyFwd push elem close closeName arr (push acc x) false q'
-          else .error ⟨q', []⟩
+          else .error { pos := q' }
         | .error e => .error e
-      else .error ⟨p, ["','", closeName]⟩
-    else .error ⟨p, ["','", closeName]⟩
+      else .error { pos := p, expected := ["','", closeName] }
+    else .error { pos := p, expected := ["','", closeName] }
 termination_by arr.size - q
 decreasing_by
   · omega
@@ -724,7 +727,7 @@ decreasing_by
 
 /-- `bodyFwd` reports a failure between its starting offset and the end of the input.
 
-The two `.error ⟨q'', []⟩` branches are unreachable rather than proved: `elem` is graded
+The two `.error { pos := q'' }` branches are unreachable rather than proved: `elem` is graded
 `conditional`, so its own `cwit` and `bwit` say the guard `q < q'' ∧ q'' ≤ arr.size` holds
 whenever `elem` succeeded from an in-bounds offset. -/
 theorem bodyFwd_err

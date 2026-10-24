@@ -240,7 +240,7 @@ theorem altMergeError
     (ex ey : Err)
     : ∃ e, (if ex.pos < ey.pos then (.error ey : ParseResult β)
       else if ey.pos < ex.pos then .error ex
-      else .error ⟨ex.pos, ex.expected ++ ey.expected⟩) = .error e
+      else .error { ex with expected := ex.expected ++ ey.expected }) = .error e
     := by
   by_cases h1 : ex.pos < ey.pos
   · rw [if_pos h1]; exact ⟨ey, rfl⟩
@@ -318,8 +318,8 @@ def oscBody
     where
   run arr q :=
     if q < arr.size then
-      (match self.run arr q with | .ok _ _ => .error ⟨q, []⟩ | .error _ => .ok () (q + 1))
-    else .error ⟨q, []⟩
+      (match self.run arr q with | .ok _ _ => .error { pos := q } | .error _ => .ok () (q + 1))
+    else .error { pos := q }
   cwit := by
     intro arr q a q' h
     split at h

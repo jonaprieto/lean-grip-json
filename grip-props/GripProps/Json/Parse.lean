@@ -217,7 +217,7 @@ theorem byte_run_fail!
     (q : Nat)
     (hq : q < arr.size)
     (hc : arr[q]! ≠ c)
-    : (GParser.byte c).run arr q = .error ⟨q, []⟩
+    : (GParser.byte c).run arr q = .error { pos := q }
     := by
   rw [getElem!_pos arr q hq] at hc
   simp only [GParser.byte, dif_pos hq]
@@ -229,7 +229,7 @@ theorem byte_run_end
     (arr : ByteArray)
     (q : Nat)
     (hq : arr.size ≤ q)
-    : (GParser.byte c).run arr q = .error ⟨q, []⟩
+    : (GParser.byte c).run arr q = .error { pos := q }
     := by
   simp only [GParser.byte, dif_neg (Nat.not_lt.mpr hq)]
 
@@ -240,7 +240,7 @@ theorem satisfy_run_fail!
     (q : Nat)
     (hq : q < arr.size)
     (hf : f arr[q]! = false)
-    : (GParser.satisfy f).run arr q = .error ⟨q, []⟩
+    : (GParser.satisfy f).run arr q = .error { pos := q }
     := by
   rw [getElem!_pos arr q hq] at hf
   simp only [GParser.satisfy, dif_pos hq]; rw [if_neg (by simp [hf])]
@@ -251,7 +251,7 @@ theorem satisfy_run_end
     (arr : ByteArray)
     (q : Nat)
     (hq : arr.size ≤ q)
-    : (GParser.satisfy f).run arr q = .error ⟨q, []⟩
+    : (GParser.satisfy f).run arr q = .error { pos := q }
     := by
   simp only [GParser.satisfy, dif_neg (Nat.not_lt.mpr hq)]
 
@@ -446,7 +446,8 @@ theorem takeWhile1_run
   have hf0 : f arr[q] = true := by
     rw [← getElem!_pos arr q hq]; simpa using hall 0 (by omega)
   show (if h : q < arr.size then
-      if f arr[q] then (GParser.takeWhile f).run arr q else .error ⟨q, []⟩ else .error ⟨q, []⟩)
+      if f arr[q] then (GParser.takeWhile f).run arr q else .error { pos := q }
+      else .error { pos := q })
       = _
   rw [dif_pos hq, if_pos hf0]
   exact takeWhile_run f arr q n hall hstop
@@ -864,8 +865,9 @@ theorem jstr_run
   have hq34 : arr[q] = 34 := by rwa [getElem!_pos arr q hqs] at h34
   -- unfold jstr
   show (if _ : q < arr.size then
-      (if arr[q] == 34 then scanStr arr q (q + 1) false else .error ⟨q, ["a string"]⟩)
-    else .error ⟨q, ["a string"]⟩) = _
+      (if arr[q] == 34 then scanStr arr q (q + 1) false
+        else .error { pos := q, expected := ["a string"] })
+    else .error { pos := q, expected := ["a string"] }) = _
   rw [dif_pos hqs, if_pos (by simp [hq34])]
   -- apply scanStr_walk: body = escape s
   have hextract_eq : arr.extract (q + 1) (q + 1 + k) = (escape s).toUTF8 :=
