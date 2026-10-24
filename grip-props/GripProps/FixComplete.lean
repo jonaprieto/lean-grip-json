@@ -267,7 +267,7 @@ theorem guarded_map2_self
     : Guarded (fun (rec : GParser conditional α) => GParser.map2 f p rec)
     := by
   intro s₁ s₂ arr q hpre
-  simp only [GParser.map2]
+  simp only [GParser.map2_run]
   cases hp : p.run arr q with
   | error e => exact AgreeOk.refl _
   | ok a q' =>

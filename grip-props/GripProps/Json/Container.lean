@@ -43,7 +43,7 @@ theorem pair_agree
       ((GParser.map2 (fun k v => (k, v)) Grip.Json.jstr
           (GParser.seqR (Grip.Json.wsByte Ascii.colon "':'") s2)).run arr pos)
     := by
-  simp only [GParser.map2, GParser.seqR]
+  simp only [GParser.map2_run, GParser.seqR_run]
   cases hjstr : Grip.Json.jstr.run arr pos with
   | error _ => exact AgreeOk.refl _
   | ok k qk =>
@@ -81,7 +81,7 @@ private theorem seqR_ws_pair_agree (s1 s2 : GParser conditional Json)
       ((GParser.seqR GParser.ws
           (GParser.map2 (fun k v => (k, v)) Grip.Json.jstr
             (GParser.seqR (Grip.Json.wsByte Ascii.colon "':'") s2))).run arr r) := by
-  simp only [GParser.seqR]
+  simp only [GParser.seqR_run]
   cases hws : GParser.ws.run arr r with
   | error _ => exact AgreeOk.refl _
   | ok _ rw =>
@@ -207,7 +207,7 @@ theorem valueBody_guarded
           (GParser.seqR GParser.ws
             (GParser.map2 (fun k v => (k, v)) Grip.Json.jstr
               (GParser.seqR (Grip.Json.wsByte Ascii.colon "':'") s2))) Ascii.rbrace "'}'" #[]
-      simp only [GParser.seqR, GParser.map]
+      simp only [GParser.seqR_run, GParser.map]
       cases hch : (GParser.ch '{').run arr p with
       | error _ => exact AgreeOk.refl _
       | ok _ p1 =>
@@ -237,7 +237,7 @@ theorem valueBody_guarded
             s1 Ascii.rbracket "']'" #[]
         set ab2 := Grip.Json.containerBody (fun (a : Array Json) e => a.push e)
             s2 Ascii.rbracket "']'" #[]
-        simp only [GParser.seqR, GParser.map]
+        simp only [GParser.seqR_run, GParser.map]
         cases hch : (GParser.ch '[').run arr p with
         | error _ => exact AgreeOk.refl _
         | ok _ p1 =>
@@ -1289,7 +1289,7 @@ theorem value_run_at : ∀ (v : Json) (buf : ByteArray) (q : Nat),
               (GParser.seqR (Grip.Json.wsByte Ascii.colon "':'") Grip.Json.value))).run
             buf (q + 1) =
             .error e := by
-          simp only [GParser.seqR, GParser.map2, hws_step, hjstr_err]
+          simp only [GParser.seqR_run, GParser.map2_run, hws_step, hjstr_err]
         have hs1 : scanFwd buf Ascii.isWs (q + 1) = q + 1 := by
           rw [scanFwd, dif_pos hq1lt, if_neg (by rw [hbuf1]; decide)]
         simp only [Grip.Json.containerBody]

@@ -105,7 +105,7 @@ theorem seqR_run
     (hy : y.run arr q' = .ok b q'')
     : (GParser.seqR x y).run arr q = .ok b q''
     := by
-  simp only [GParser.seqR, hx, hy]
+  simp only [GParser.seqR_run, hx, hy]
 
 /-- `seqL` on two successes keeps the left value. -/
 theorem seqL_run
@@ -121,7 +121,7 @@ theorem seqL_run
     (hy : y.run arr q' = .ok b q'')
     : (GParser.seqL x y).run arr q = .ok a q''
     := by
-  simp only [GParser.seqL, hx, hy]
+  simp only [GParser.seqL_run, hx, hy]
 
 /-- `map2` on two successes combines the values. -/
 theorem map2_run
@@ -138,7 +138,7 @@ theorem map2_run
     (hy : y.run arr q' = .ok b q'')
     : (GParser.map2 f x y).run arr q = .ok (f a b) q''
     := by
-  simp only [GParser.map2, hx, hy]
+  simp only [GParser.map2_run, hx, hy]
 
 /-- `captureWith? f p`: `p` succeeds and `f` accepts the consumed range. -/
 theorem captureWith?_run
@@ -265,7 +265,7 @@ theorem seqR_run_fail_left
     (hx : x.run arr q = .error e)
     : (GParser.seqR x y).run arr q = .error e
     := by
-  simp only [GParser.seqR, hx]
+  simp only [GParser.seqR_run, hx]
 
 /-- `matchBytes` succeeds when `arr`'s bytes from `q` match `bs` from `i`. -/
 theorem matchBytes_true
@@ -278,9 +278,10 @@ theorem matchBytes_true
   rw [Grip.matchBytes]
   split
   · rename_i hi
-    rw [if_pos (show q < arr.size by omega), Bool.and_eq_true]
+    have hq : q < arr.size := by omega
+    rw [dif_pos hq, Bool.and_eq_true]
     refine ⟨?_, ?_⟩
-    · rw [beq_iff_eq]; simpa using hmatch i (le_refl i) hi
+    · rw [beq_iff_eq]; simpa [getElem!_pos, hi, hq] using hmatch i (le_refl i) hi
     · exact matchBytes_true arr bs (q + 1) (i + 1) (by omega) (fun j hj hjs => by
         have := hmatch j (by omega) hjs
         have he : q + 1 + (j - (i + 1)) = q + (j - i) := by omega
