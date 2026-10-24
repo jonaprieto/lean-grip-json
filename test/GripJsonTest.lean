@@ -157,9 +157,9 @@ def errMsg
 #guard errMsg "1e"         == some "expected end of input"
 
 -- Empty containers, whitespace and all, are still accepted.
-#guard parseString "[]"    == .ok (Json.arr #[])
-#guard parseString "[  ]"  == .ok (Json.arr #[])
-#guard parseString "{}"    == .ok (Json.obj #[])
-#guard parseString "{\n}"  == .ok (Json.obj #[])
+#guard (parseString "[]").toOption == some (Json.arr #[])
+#guard (parseString "[  ]").toOption == some (Json.arr #[])
+#guard (parseString "{}").toOption == some (Json.obj #[])
+#guard (parseString "{\n}").toOption == some (Json.obj #[])
 
 end

@@ -1093,6 +1093,6 @@ open Grip Grip.Json
 #guard toString (Json.obj #[("a", Json.bool true)]) == "{\"a\":true}"
 #guard
   (let v := Json.obj #[("a", Json.arr #[Json.num 25 1, Json.null]), ("b", Json.str "x\ty")]
-   parseString (toString v) == .ok v)
+   (parseString (toString v)).toOption == some v)
 
 end
