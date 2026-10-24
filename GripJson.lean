@@ -141,7 +141,7 @@ def uStep
 when a body actually contained a `\`-escape, off the escape-free fast path. -/
 def unescape (s : String) : String := (s.toList.foldl uStep {}).out
 
-/-- State threaded through `decodeNumber`'s single fold over the whole lexeme. -/
+/-- State threaded through `decodeNumberBytes?`'s single fold over the whole lexeme. -/
 structure NState where
   mant    : Nat := 0     -- integer and fractional digits as one natural
   fracLen : Nat := 0     -- number of fractional digits
@@ -184,7 +184,7 @@ def maxExp : Nat := 1000000
 `.num mantissa exponent`, or `none` when the net positive exponent exceeds `maxExp` (which would
 otherwise fold into an unbounded `10 ^ n` and panic). A nonnegative base-10 exponent is folded
 into the mantissa (so `2e3` is `num 2000 0`), keeping `exponent : Nat`; a negative one becomes
-the exponent (`2.5` is `num 25 1`). Folds `numByte` over the input bytes directly — no `capture`
+the exponent (`2.5` is `num 25 1`). Folds `numByte` over the input bytes directly: no `capture`
 `String`, no per-char UTF-8 decode. -/
 @[inline]
 def decodeNumberBytes?
@@ -238,13 +238,13 @@ theorem escEnd_gt
   revert h
   fun_cases escEnd arr q <;> intro h <;> cases h <;> omega
 
-/-- Scan a strict RFC-8259 string body and produce the decoded `String` in one pass. `q0` is
-the opening-quote index and `q` the current scan position; `esc` accumulates whether any `\`
-was seen. On the closing quote the body `arr[q0+1 .. q)` is validated and decoded as UTF-8 in
-one pass (`String.fromUTF8?`, no separate validation walk) and unescaped only when `esc`;
-invalid UTF-8 in the body is rejected rather than silently decoded to an empty string. No
-second backslash pass and no intermediate `capture`/escape-flag allocation. Escapes are
-validated by `escEnd`, keeping this loop flat. Total (structural on `arr.size - q`). -/
+/-- Scan a strict RFC-8259 string body and decode it to a `String`. `q0` is the opening-quote
+index and `q` the current scan position; `esc` accumulates whether any `\` was seen, so the
+scan itself finds the escapes and no second backslash pass is needed. On the closing quote the
+body `arr[q0+1 .. q)` is validated and decoded as UTF-8 by `String.fromUTF8?`, then unescaped
+only when `esc`; invalid UTF-8 in the body is rejected rather than silently decoded to an empty
+string. Escapes are validated by `escEnd`, keeping this loop flat. Total: well-founded on
+`arr.size - q`. -/
 @[specialize]
 def scanStr
     (arr : ByteArray)
@@ -360,7 +360,7 @@ def intPart
 
 /-- A JSON number, decoded to `.num` straight from the consumed byte range (no `capture`
 `String`). Leading-zero and trailing-garbage rejection come from the grammar and the
-top-level EOF check. -/
+top-level EOF check; a number whose net positive exponent exceeds `maxExp` fails here. -/
 @[inline]
 def number
     : GParser conditional Json
@@ -542,7 +542,7 @@ position the position of the real problem:
   else reports `elem`'s own error rather than "expected `close`" back at the opening bracket.
   No element can start at a `close` byte, so this fallback never masks a real failure.
 
-Total: structural on `arr.size - q`, using `elem`'s `cwit` (it always consumes) to strictly
+Total: well-founded on `arr.size - q`, using `elem`'s `cwit` (it always consumes) to strictly
 advance. The `q < q' ∧ q' ≤ arr.size` guard is never false for a graded `elem`, but stating it
 here is what makes the measure decrease without a bounds hypothesis on the caller. -/
 @[specialize]
@@ -814,7 +814,7 @@ def joinWith
 
 /-- Serialize a value to compact RFC-8259 JSON (no insignificant whitespace). Parsing the result
 recovers the exact `Json` value, including the numeric mantissa/exponent representation. Total:
-structural on `sizeOf`; `attach` carries the membership proof each recursive call decreases by. -/
+well-founded on `sizeOf`; `attach` carries the membership proof each recursive call decreases by. -/
 def render
     : Json →
       String

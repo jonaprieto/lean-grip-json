@@ -3,7 +3,6 @@
 [![CI](https://github.com/jonaprieto/lean-grip-json/actions/workflows/ci.yml/badge.svg)](https://github.com/jonaprieto/lean-grip-json/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/jonaprieto/lean-grip-json?display_name=tag&sort=semver)](https://github.com/jonaprieto/lean-grip-json/releases)
 [![Lean 4](https://img.shields.io/badge/Lean%204-v4.33.1-6f42c1)](lean-toolchain)
-[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-4c8bf5)](https://jonaprieto.github.io/lean-grip-json/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
 An exact, RFC-8259 JSON value parser and renderer for Lean 4, built on
@@ -39,9 +38,11 @@ Changes are reviewed, tested, and remain the maintainer's responsibility.
 
 ## Install
 
+Pin the newest release tag (the Release badge above shows it) in place of `vX.Y.Z`:
+
 ```lean
 require «grip-json» from git
-  "https://github.com/jonaprieto/lean-grip-json.git" @ "v0.1.5"
+  "https://github.com/jonaprieto/lean-grip-json.git" @ "vX.Y.Z"
 ```
 
 ## Build and verification
