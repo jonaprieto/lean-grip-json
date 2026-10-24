@@ -213,7 +213,11 @@ theorem toDigits_head_pos
   simp [h49, h57]
 
 /-- A positive natural renders to at least one decimal digit. -/
-theorem toDigits_nonempty (n : Nat) (hn : 0 < n) : Nat.toDigits 10 n ≠ [] := fun h => by
+theorem toDigits_nonempty
+    (n : Nat)
+    (hn : 0 < n)
+    : Nat.toDigits 10 n ≠ []
+    := fun h => by
   have := (toDigits_head_pos n hn).2; rw [h] at this; exact absurd this (by decide)
 
 /-- Byte-value bounds give the `Ascii.isDigit19` predicate. -/

@@ -276,20 +276,29 @@ theorem scanStr_esc_step
 
 /-- `escEnd` accepts a simple two-byte escape: a backslash whose successor is one of the named
 escape bytes advances by two. -/
-theorem escEnd_simple (arr : ByteArray) (q : Nat) (hq : q + 1 < arr.size)
+theorem escEnd_simple
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : q + 1 < arr.size)
     (hset : (arr[q + 1]! == 34 || arr[q + 1]! == 92 || arr[q + 1]! == 47 || arr[q + 1]! == 98 ||
       arr[q + 1]! == 102 || arr[q + 1]! == 110 || arr[q + 1]! == 114 ||
-      arr[q + 1]! == 116) = true) :
-    escEnd arr q = some (q + 2) := by
+      arr[q + 1]! == 116) = true)
+    : escEnd arr q = some (q + 2)
+    := by
   rw [getElem!_pos arr (q + 1) hq] at hset
   rw [escEnd, dif_pos hq, if_pos hset]
 
 /-- `escEnd` accepts a `\uXXXX` escape: `\`, `u`, then four hex bytes, advancing by six. -/
-theorem escEnd_u (arr : ByteArray) (q : Nat) (hq1 : q + 1 < arr.size) (hq5 : q + 5 < arr.size)
+theorem escEnd_u
+    (arr : ByteArray)
+    (q : Nat)
+    (hq1 : q + 1 < arr.size)
+    (hq5 : q + 5 < arr.size)
     (hu : arr[q + 1]! = 117)
     (hhex : (Ascii.isHexDigit arr[q + 2]! && Ascii.isHexDigit arr[q + 3]! &&
-      Ascii.isHexDigit arr[q + 4]! && Ascii.isHexDigit arr[q + 5]!) = true) :
-    escEnd arr q = some (q + 6) := by
+      Ascii.isHexDigit arr[q + 4]! && Ascii.isHexDigit arr[q + 5]!) = true)
+    : escEnd arr q = some (q + 6)
+    := by
   rw [getElem!_pos arr (q + 1) hq1] at hu
   rw [getElem!_pos arr (q + 2) (by omega), getElem!_pos arr (q + 3) (by omega),
     getElem!_pos arr (q + 4) (by omega), getElem!_pos arr (q + 5) hq5] at hhex
@@ -335,30 +344,49 @@ theorem hexDigit_utf8
   String.utf8EncodeChar_eq_singleton (Char.utf8Size_eq_one_iff.mpr (hexDigit_val_le k))
 
 /-- A two-byte escape (`\` then a named escape byte) is walked in two, marking `esc`. -/
-theorem scanStr_char_escape2 (arr : ByteArray) (q0 q : Nat) (esc : Bool) (Xb : UInt8)
-    (hq1 : q + 1 < arr.size) (h92 : arr[q]! = 92) (hX : arr[q + 1]! = Xb)
+theorem scanStr_char_escape2
+    (arr : ByteArray)
+    (q0 q : Nat)
+    (esc : Bool)
+    (Xb : UInt8)
+    (hq1 : q + 1 < arr.size)
+    (h92 : arr[q]! = 92)
+    (hX : arr[q + 1]! = Xb)
     (hset : (Xb == 34 || Xb == 92 || Xb == 47 || Xb == 98 || Xb == 102 || Xb == 110 ||
-      Xb == 114 || Xb == 116) = true) :
-    scanStr arr q0 q esc = scanStr arr q0 (q + 2) true :=
+      Xb == 114 || Xb == 116) = true)
+    : scanStr arr q0 q esc = scanStr arr q0 (q + 2) true
+    :=
   scanStr_esc_step arr q0 q (q + 2) esc (by omega) h92
     (escEnd_simple arr q hq1 (by rw [hX]; exact hset))
 
 /-- A `\uXXXX` escape (a control character's rendering) is walked in six, marking `esc`. -/
-theorem scanStr_char_escapeU (arr : ByteArray) (q0 q : Nat) (esc : Bool) (hq5 : q + 5 < arr.size)
-    (h92 : arr[q]! = 92) (hu : arr[q + 1]! = 117)
+theorem scanStr_char_escapeU
+    (arr : ByteArray)
+    (q0 q : Nat)
+    (esc : Bool)
+    (hq5 : q + 5 < arr.size)
+    (h92 : arr[q]! = 92)
+    (hu : arr[q + 1]! = 117)
     (hhex : (Ascii.isHexDigit arr[q + 2]! && Ascii.isHexDigit arr[q + 3]! &&
-      Ascii.isHexDigit arr[q + 4]! && Ascii.isHexDigit arr[q + 5]!) = true) :
-    scanStr arr q0 q esc = scanStr arr q0 (q + 6) true :=
+      Ascii.isHexDigit arr[q + 4]! && Ascii.isHexDigit arr[q + 5]!) = true)
+    : scanStr arr q0 q esc = scanStr arr q0 (q + 6) true
+    :=
   scanStr_esc_step arr q0 q (q + 6) esc (by omega) h92 (escEnd_u arr q (by omega) hq5 hu hhex)
 
 /-- A named two-byte escape, given its byte layout `[92, Xb]`, is walked in two. -/
-theorem escape2_of (arr : ByteArray) (q0 q : Nat) (esc : Bool) (c : Char) (Xb : UInt8)
+theorem escape2_of
+    (arr : ByteArray)
+    (q0 q : Nat)
+    (esc : Bool)
+    (c : Char)
+    (Xb : UInt8)
     (hcb : cbytes c = [92, Xb])
     (hset : (Xb == 34 || Xb == 92 || Xb == 47 || Xb == 98 || Xb == 102 || Xb == 110 ||
       Xb == 114 || Xb == 116) = true)
     (hcontent : ∀ j, j < (cbytes c).length → arr[q + j]! = (cbytes c)[j]!)
-    (hbound : q + (cbytes c).length ≤ arr.size) :
-    scanStr arr q0 q esc = scanStr arr q0 (q + (cbytes c).length) true := by
+    (hbound : q + (cbytes c).length ≤ arr.size)
+    : scanStr arr q0 q esc = scanStr arr q0 (q + (cbytes c).length) true
+    := by
   have hlen : (cbytes c).length = 2 := by rw [hcb]; rfl
   rw [hlen]
   have h92 : arr[q]! = 92 := by

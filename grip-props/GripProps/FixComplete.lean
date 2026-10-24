@@ -376,12 +376,22 @@ theorem guarded_manyTillBody
 
 /-- `manyTill` is complete: a success reachable at any larger fuel is produced by `manyTill`
 itself. A combinator-built recursive grammar, proved complete end to end. -/
-theorem manyTill_complete {β : Type} (p : GParser conditional α) (endp : GParser conditional β)
-    (arr : ByteArray) (q : Nat) (hq : q ≤ arr.size) {m : Nat} (hm : arr.size - q + 1 ≤ m)
-    {a : List α} {q' : Nat}
-    (h : GParser.fixFuel (fun rec => GParser.alt (GParser.map (fun _ => ([] : List α)) endp)
-      (GParser.map2 (fun x xs => x :: xs) p rec)) m arr q = .ok a q') :
-    (GParser.manyTill p endp).run arr q = .ok a q' :=
+theorem manyTill_complete
+    {β : Type}
+    (p : GParser conditional α)
+    (endp : GParser conditional β)
+    (arr : ByteArray)
+    (q : Nat)
+    (hq : q ≤ arr.size)
+    {m : Nat}
+    (hm : arr.size - q + 1 ≤ m)
+    {a : List α}
+    {q' : Nat}
+    (h :
+      GParser.fixFuel (fun rec => GParser.alt (GParser.map (fun _ => ([] : List α)) endp)
+        (GParser.map2 (fun x xs => x :: xs) p rec)) m arr q = .ok a q')
+    : (GParser.manyTill p endp).run arr q = .ok a q'
+    :=
   fix_complete _ (guarded_manyTillBody p endp) arr q hq hm h
 
 end Grip.FixComplete
