@@ -257,7 +257,6 @@ body `arr[q0+1 .. q)` is validated and decoded as UTF-8 by `String.fromUTF8?`, t
 only when `esc`; invalid UTF-8 in the body is rejected rather than silently decoded to an empty
 string. Escapes are validated by `escEnd`, keeping this loop flat. Total: well-founded on
 `arr.size - q`. -/
-@[specialize]
 def scanStr
     (arr : ByteArray)
     (q0 q : Nat)
