@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.9 — 2026-11-18
+
+- Refresh Grip to v0.4.2, in both Lake projects. Grip's choice, count and `manyTill` loops and
+  its single-branch `byte`/`satisfy` leave the JSONTestSuite figures and the axiom set of
+  `GripProps.Container.parse_render` unchanged. The property proofs follow Grip's `Err.merge`
+  and `byteIs`; `manyTill_complete` relates the `manyTillFwd` loop to `fix` by fuel induction.
+
 ## 0.1.8 — 2026-10-24
 
 - Refresh Grip to v0.4.1, in both Lake projects. Proofs that unfolded `seqR`, `seqL` or `map2`

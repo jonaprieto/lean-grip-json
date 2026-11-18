@@ -1030,7 +1030,7 @@ theorem value_run_at
           rw [wsDispatch_run_stop _ buf (q + 1) hq1lt hws1, hbuf1]
           simp [Ascii.lbrace, Ascii.lbracket, Ascii.quote, Ascii.code,
             Ascii.isDigit, Ascii.dash,
-            clampAdvance, GParser.label, GParser.map, GParser.satisfy]
+            clampAdvance, GParser.label, GParser.map, GParser.satisfy, byteIs_of_lt hq1lt]
         have hs1 : scanFwd buf Ascii.isWs (q + 1) = q + 1 := by
           rw [scanFwd, dif_pos hq1lt, if_neg (by rw [hws1]; decide)]
         simp only [Grip.Json.containerBody]
