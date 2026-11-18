@@ -31,8 +31,7 @@ theorem eof_run_end
     (hq : arr.size ≤ q)
     : (GParser.eof).run arr q = .ok () q
     := by
-  simp only [GParser.eof, GParser.label, GParser.notFollowedBy, GParser.satisfy]
-  rw [dif_neg (by omega : ¬ q < arr.size)]
+  simp [GParser.eof, GParser.label, GParser.notFollowedBy, GParser.satisfy, byteIs_of_le hq]
 
 /-- `scanFwd` consumes exactly a maximal run of `n` matching bytes ending at a non-match or EOF. -/
 theorem scanFwd_run
@@ -196,7 +195,7 @@ theorem satisfy_run!
     : (GParser.satisfy f).run arr q = .ok arr[q]! (q + 1)
     := by
   rw [getElem!_pos arr q hq] at hf ⊢
-  simp only [GParser.satisfy, dif_pos hq, hf, if_true]
+  simp [GParser.satisfy, byteIs_of_lt hq, hf]
 
 /-- `byte c` on a matching in-bounds byte (stated with `getElem!`). -/
 theorem byte_run!
@@ -208,7 +207,7 @@ theorem byte_run!
     : (GParser.byte c).run arr q = .ok () (q + 1)
     := by
   rw [getElem!_pos arr q hq] at hc
-  simp only [GParser.byte, dif_pos hq, hc, beq_self_eq_true, if_true]
+  simp [GParser.byte, byteIs_of_lt hq, hc]
 
 /-- `byte c` fails at an in-bounds non-matching byte. -/
 theorem byte_run_fail!
@@ -220,8 +219,7 @@ theorem byte_run_fail!
     : (GParser.byte c).run arr q = .error { pos := q }
     := by
   rw [getElem!_pos arr q hq] at hc
-  simp only [GParser.byte, dif_pos hq]
-  rw [if_neg (by simpa [beq_iff_eq] using hc)]
+  simp [GParser.byte, byteIs_of_lt hq, hc, failAt]
 
 /-- `byte c` fails at end of input. -/
 theorem byte_run_end
@@ -231,7 +229,7 @@ theorem byte_run_end
     (hq : arr.size ≤ q)
     : (GParser.byte c).run arr q = .error { pos := q }
     := by
-  simp only [GParser.byte, dif_neg (Nat.not_lt.mpr hq)]
+  simp [GParser.byte, byteIs_of_le hq, failAt]
 
 /-- `satisfy f` fails at an in-bounds non-satisfying byte. -/
 theorem satisfy_run_fail!
@@ -243,7 +241,7 @@ theorem satisfy_run_fail!
     : (GParser.satisfy f).run arr q = .error { pos := q }
     := by
   rw [getElem!_pos arr q hq] at hf
-  simp only [GParser.satisfy, dif_pos hq]; rw [if_neg (by simp [hf])]
+  simp [GParser.satisfy, byteIs_of_lt hq, hf, failAt]
 
 /-- `satisfy f` fails at end of input. -/
 theorem satisfy_run_end
@@ -253,7 +251,7 @@ theorem satisfy_run_end
     (hq : arr.size ≤ q)
     : (GParser.satisfy f).run arr q = .error { pos := q }
     := by
-  simp only [GParser.satisfy, dif_neg (Nat.not_lt.mpr hq)]
+  simp [GParser.satisfy, byteIs_of_le hq, failAt]
 
 /-- `seqR`, left fails. -/
 theorem seqR_run_fail_left

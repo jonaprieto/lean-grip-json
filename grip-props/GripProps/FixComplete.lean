@@ -302,7 +302,7 @@ theorem guarded_alt
         | error ey2 => rw [hy1, hy2] at hy'; simp_all [AgreeOk]
       | error ey1 => cases hy2 : (y s₂).run arr q with
         | ok b2 r2 => rw [hy1, hy2] at hy'; simp_all [AgreeOk]
-        | error ey2 => exact agree_error (altMergeError ex1 ey1) (altMergeError ex2 ey2)
+        | error ey2 => exact agree_error ⟨_, rfl⟩ ⟨_, rfl⟩
 
 /-! ### Guardedness is necessary
 
@@ -357,11 +357,11 @@ def oscBody
 
 /-! ### A worked grammar, complete end to end
 
-`manyTill` (`Grip/Combinators.lean`) is `fix` of `alt (map _ endp) (map2 (· :: ·) p rec)`. Its body
-is guarded purely by composition of the lemmas above: the left branch ignores `rec`
-(`guarded_const`), the right consults `rec` only after the `conditional` parser `p` consumes
-(`guarded_map2_self`), and `alt` preserves that (`guarded_alt`). So `manyTill` computes the ideal
-fixpoint: the fuel bound truncates none of its parses. -/
+`manyTill` (`Grip/Combinators.lean`) runs as the loop `manyTillFwd`. To prove completeness,
+compare its successful runs with `fix` of `alt (map _ endp) (map2 (· :: ·) p rec)`. This body is
+guarded: the left branch ignores `rec` (`guarded_const`), the right consults `rec` only after the
+`conditional` parser `p` consumes (`guarded_map2_self`), and `alt` preserves that
+(`guarded_alt`). -/
 
 /-- `manyTill`'s body is guarded, assembled from the closure lemmas. -/
 theorem guarded_manyTillBody
@@ -391,7 +391,53 @@ theorem manyTill_complete
       GParser.fixFuel (fun rec => GParser.alt (GParser.map (fun _ => ([] : List α)) endp)
         (GParser.map2 (fun x xs => x :: xs) p rec)) m arr q = .ok a q')
     : (GParser.manyTill p endp).run arr q = .ok a q'
-    :=
-  fix_complete _ (guarded_manyTillBody p endp) arr q hq hm h
+    := by
+  let body (rec : GParser conditional (List α)) : GParser conditional (List α) :=
+    GParser.alt (GParser.map (fun _ => ([] : List α)) endp)
+      (GParser.map2 (fun x xs => x :: xs) p rec)
+  have hfix : (GParser.fix body).run arr q = .ok a q' :=
+    fix_complete body (guarded_manyTillBody p endp) arr q hq hm h
+  have loop_ok
+      (n : Nat)
+      (q : Nat)
+      (hq : q ≤ arr.size)
+      (err : Err)
+      (acc xs : List α)
+      (r : Nat)
+      (hr : (GParser.fixSelf body n).run arr q = .ok xs r)
+      : GParser.manyTillFwd p endp arr err acc q = .ok (acc.reverse ++ xs) r := by
+    induction n generalizing q err acc xs r with
+    | zero =>
+      simp only [GParser.fixSelf_run, GParser.fixFuel_zero, clampAdvance, reduceCtorEq] at hr
+    | succ n ih =>
+      rw [GParser.fixSelf_run, GParser.fixFuel_succ] at hr
+      let self := GParser.fixSelf body n
+      change clampAdvance arr q ((body self).run arr q) = _ at hr
+      dsimp only [body, GParser.alt, GParser.map, GParser.map2_run] at hr
+      rw [GParser.manyTillFwd]
+      cases he : endp.run arr q with
+      | ok b q1 =>
+        have hbound := And.intro (endp.cwit he) (endp.bwit hq he)
+        simp only [he, clampAdvance, if_pos hbound, ParseResult.ok.injEq] at hr
+        rcases hr with ⟨rfl, rfl⟩
+        simp only [List.append_nil]
+      | error ex =>
+        cases hp : p.run arr q with
+        | error ey =>
+          simp only [he, hp, clampAdvance, reduceCtorEq] at hr
+        | ok x q1 =>
+          have hq1 := p.bwit hq hp
+          cases hs : self.run arr q1 with
+          | error e =>
+            simp only [he, hp, hs, clampAdvance, reduceCtorEq] at hr
+          | ok ys q2 =>
+            have hlt := self.cwit hs
+            have hle := self.bwit hq1 hs
+            have hbound := And.intro (Nat.lt_trans (p.cwit hp) hlt) hle
+            simp only [he, hp, hs, clampAdvance, if_pos hbound, ParseResult.ok.injEq] at hr
+            rcases hr with ⟨rfl, rfl⟩
+            simpa only [if_pos hq1, List.reverse_cons, List.append_assoc, List.singleton_append]
+              using ih q1 hq1 (err.merge ex) (x :: acc) ys q2 hs
+  exact loop_ok (arr.size - q + 1) q hq { pos := 0 } [] a q' hfix
 
 end Grip.FixComplete
