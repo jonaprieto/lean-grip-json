@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.10 — 2026-11-20
+
+- Support Lean v4.36.0.
+
 ## 0.1.9 — 2026-11-18
 
 - Refresh Grip to v0.4.2, in both Lake projects. Grip's choice, count and `manyTill` loops and
