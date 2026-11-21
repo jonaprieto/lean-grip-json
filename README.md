@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/jonaprieto/lean-grip-json/actions/workflows/ci.yml/badge.svg)](https://github.com/jonaprieto/lean-grip-json/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/jonaprieto/lean-grip-json?display_name=tag&sort=semver)](https://github.com/jonaprieto/lean-grip-json/releases)
-[![Lean 4](https://img.shields.io/badge/Lean%204-v4.33.1-6f42c1)](lean-toolchain)
+[![Lean 4](https://img.shields.io/badge/Lean%204-v4.36.0-6f42c1)](lean-toolchain)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
 An exact, RFC-8259 JSON value parser and renderer for Lean 4, built on
